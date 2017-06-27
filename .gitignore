@@ -1,1 +1,5 @@
 .idea
+/mnist
+/results
+/data
+/.ipynb_checkpoints
