@@ -576,7 +576,7 @@ def DetermineAccuracy(phase, datasetLoaders):
     for data in datasetLoaders[phase]:
         # Inputs
         inputs, labels = data
-        if useGPU:
+        if torch.cuda.is_available():
             inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
         else:
             inputs, labels = Variable(inputs), Variable(labels)
