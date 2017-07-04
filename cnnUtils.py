@@ -530,3 +530,59 @@ class SELU(nn.Module):
     def __repr__(self):
         inplace_str = ' (inplace)' if self.inplace else ''
         return self.__class__.__name__ + inplace_str
+
+def PlotActivationMaps(gradients):
+    for iT in range(gradients.size()[0]):
+        plt.figure(figsize=(8, 8))
+        for z in range(gradients.size()[1]):
+            plt.subplot(8, 8, z+1)
+            plt.title('Level ' + str(iT) + ' field:' + str(z))
+            plt.axis('off')
+            plt.pause(0.001)
+            plt.imshow(gradients[iT, z, :, :].data.cpu().numpy(), interpolation='nearest', cmap='gray')
+            
+def PlotArrays(arrays, labels, xlabel, ylabel, title):
+    p = figure(title=title, x_axis_label=xlabel, y_axis_label=ylabel)
+    length = len(arrays[0])
+    palette = Spectral7[0:len(arrays)]
+    x = np.linspace(0, length - 1, length)
+    i = 0
+    
+    for array, label in zip(arrays, labels):
+        p.circle(x, array, legend=label, fill_color=palette[i], line_color=palette[i])
+        p.line(x, array, legend=label, line_color=palette[i], line_width=2)
+        i += 1
+    
+    p.legend.location = 'bottom_left'
+    show(p)
+
+import math
+def plotNNFilter(units):
+    print(units.shape)
+    filters = units.shape[0]
+    plt.figure(1, figsize=(6,6))
+    
+    n_columns = 6
+    n_rows = math.ceil(filters / n_columns) + 1
+    for i in range(filters):
+        plt.subplot(n_rows, n_columns, i+1)
+        #plt.title('Filter ' + str(i))
+        plt.axis('off')
+        plt.imshow(units[i,0,:,:], interpolation="nearest", cmap="gray")
+        
+def DetermineAccuracy(phase, datasetLoaders):
+    correct = 0
+    total = 0
+    for data in datasetLoaders[phase]:
+        # Inputs
+        inputs, labels = data
+        if useGPU:
+            inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
+        else:
+            inputs, labels = Variable(inputs), Variable(labels)
+
+        outputs = net(inputs)
+        _, predicted = torch.max(outputs.data, 1)
+        total += labels.size(0)
+        correct += (predicted == labels.data).sum()
+    return correct, total
