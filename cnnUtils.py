@@ -95,15 +95,6 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetLoader
         
         # Each epoch has a training and validation phase
         for phase in ['train', 'test']:
-            if phase == 'train':
-                #optimizer, currentLr = lr_scheduler(optimizer, epoch)
-                currentLr = lr_scheduler.get_lr()
-                lr_scheduler.step()
-                print('LR: ' + str(currentLr))
-                model.train(True)  # Set model to training mode
-            else:
-                model.train(False)  # Set model to evaluate mode
-
             running_loss = 0.0
             running_corrects = 0
 
@@ -147,6 +138,19 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetLoader
 
             epoch_loss = running_loss / datasetSizes[phase]
             epoch_acc = running_corrects / datasetSizes[phase]
+
+            if phase == 'train':
+                #optimizer, currentLr = lr_scheduler(optimizer, epoch)
+                if type(lr_scheduler) is ReduceLROnPlateau:
+                	lr_scheduler.step(epoch_loss)
+                else:
+                	currentLr = lr_scheduler.get_lr()
+                	lr_scheduler.step()
+
+                print('LR: ' + str(currentLr))
+                model.train(True)  # Set model to training mode
+            else:
+                model.train(False)  # Set model to evaluate mode
             
             if phase == 'train':
                 trainErrorArray.append(epoch_loss)
@@ -285,7 +289,7 @@ class ReduceLROnPlateau(object):
             raise ValueError('Factor should be < 1.0.')
         self.factor = factor
 
-        if not isinstance(optimizer, Optimizer):
+        if not isinstance(optimizer, torch.optim.Optimizer):
             raise TypeError('{} is not an Optimizer'.format(
                 type(optimizer).__name__))
         self.optimizer = optimizer
