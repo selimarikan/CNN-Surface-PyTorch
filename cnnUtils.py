@@ -533,7 +533,7 @@ class SELU(nn.Module):
 
 def PlotActivationMaps(gradients):
     for iT in range(gradients.size()[0]):
-        plt.figure(figsize=(8, 8))
+        plt.figure(figsize=(12, 12))
         for z in range(gradients.size()[1]):
             plt.subplot(8, 8, z+1)
             plt.title('Level ' + str(iT) + ' field:' + str(z))
