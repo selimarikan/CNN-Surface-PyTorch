@@ -76,25 +76,34 @@ def plot_with_labels(lowDWeights, labels):
     plt.xlim(X.min(), X.max()); plt.ylim(Y.min(), Y.max()); plt.title('Visualize last layer'); plt.show(); plt.pause(0.01)
 
 # Check t-SNE for details
-def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetLoaders, datasetSizes, trainAccuracyArray, testAccuracyArray, 
-                        lrLogArray, trainErrorArray, testErrorArray, num_epochs=25):
+def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetLoaders, datasetSizes, trainAccuracyArray,
+                        testAccuracyArray, lrLogArray, trainErrorArray, testErrorArray, num_epochs=25):
     since = time.time()
     del trainAccuracyArray[:]
     del testAccuracyArray[:]
     del lrLogArray[:]
     del trainErrorArray[:]
     del testErrorArray[:]
-    
+
     best_model = model
     best_acc = 0.0
-    currentLr = 0        
+    currentLr = 0
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
-        
+
         # Each epoch has a training and validation phase
         for phase in ['train', 'test']:
+            if phase == 'train':
+                # optimizer, currentLr = lr_scheduler(optimizer, epoch)
+                currentLr = lr_scheduler.get_lr()
+                lr_scheduler.step()
+
+                print('LR: ' + str(currentLr))
+                model.train(True)  # Set model to training mode
+            else:
+                model.train(False)  # Set model to evaluate mode
             running_loss = 0.0
             running_corrects = 0
 
@@ -122,7 +131,7 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetLoader
                 # statistics
                 running_loss += loss.data[0]
                 running_corrects += torch.sum(preds == labels.data)
-                
+
                 #if i % 50 == 0:
                 if True == False:
                     print('epoch {} batch {}/{} loss {:.3f}'.format(
@@ -139,18 +148,7 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetLoader
             epoch_loss = running_loss / datasetSizes[phase]
             epoch_acc = running_corrects / datasetSizes[phase]
 
-            if phase == 'train':
-                #optimizer, currentLr = lr_scheduler(optimizer, epoch)
-                if type(lr_scheduler) is ReduceLROnPlateau:
-                	lr_scheduler.step(epoch_loss)
-                else:
-                	currentLr = lr_scheduler.get_lr()
-                	lr_scheduler.step()
-
-                print('LR: ' + str(currentLr))
-                model.train(True)  # Set model to training mode
-            else:
-                model.train(False)  # Set model to evaluate mode
+            
             
             if phase == 'train':
                 trainErrorArray.append(epoch_loss)
