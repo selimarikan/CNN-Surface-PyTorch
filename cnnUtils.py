@@ -14,6 +14,7 @@ from bokeh.palettes import Spectral7
 from bokeh.io import output_notebook
 #from graphviz import Digraph
 import numpy as np
+import gc
 import time
 import copy
 import os
@@ -168,7 +169,9 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetLoader
                 best_acc = epoch_acc
                 best_model = copy.deepcopy(model)
 
-        print()
+        print() 
+        del inputs, labels, loss, outputs
+        gc.collect()
 
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
