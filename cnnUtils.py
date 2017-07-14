@@ -76,6 +76,11 @@ def plot_with_labels(lowDWeights, labels):
         c = cm.rainbow(int(255 * s / 9)); plt.text(x, y, datasetClasses[s], backgroundcolor=c, fontsize=9)
     plt.xlim(X.min(), X.max()); plt.ylim(Y.min(), Y.max()); plt.title('Visualize last layer'); plt.show(); plt.pause(0.01)
 
+def ToVar(tensor):
+    if torch.cuda.is_available():
+        tensor = tensor.cuda()
+    return Variable(tensor)
+
 # Check t-SNE for details
 def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetLoaders, datasetSizes, trainAccuracyArray,
                         testAccuracyArray, lrLogArray, trainErrorArray, testErrorArray, num_epochs=25):
@@ -116,18 +121,22 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetLoader
                 else:
                     inputs, labels = Variable(inputs), Variable(labels)
 
+                #Debug images
+                #ImShow(torchvision.utils.make_grid(inputs.data.cpu()), mean=[0.544, 0.544, 0.544], std=[0.056, 0.056, 0.056], title=labels)
+
                 # zero the parameter gradients
                 optimizer.zero_grad()
 
-                # forward
+                # forward, backward, optimize
                 outputs = model(inputs)
-                _, preds = torch.max(outputs.data, 1)
                 loss = criterion(outputs, labels)
-
                 # backward + optimize only if in training phase
                 if phase == 'train':
                     loss.backward()
                     optimizer.step()
+
+                # Accuracy
+                _, preds = torch.max(outputs.data, 1)
 
                 # statistics
                 running_loss += loss.data[0]
