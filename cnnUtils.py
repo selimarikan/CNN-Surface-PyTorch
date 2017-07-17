@@ -16,6 +16,7 @@ from bokeh.io import output_notebook
 import numpy as np
 import gc
 import time
+import math
 import copy
 import os
 import PIL
@@ -30,19 +31,7 @@ def ImShow(input, mean, std, title=None):
         plt.title(title)
     plt.pause(0.001)
 
-
-def ExpLRScheduler(optimizer, epoch, init_lr=0.001, lr_decay_epoch=7):
-    lr = init_lr * (0.1 ** (epoch // lr_decay_epoch))
-
-    if epoch % lr_decay_epoch == 0:
-        print('LR is set to {}'.format(lr))
-
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
-
-    return optimizer
-
-
+# TODO: Do we still need this?
 def VisualizeModel(model, numImages=6):
     imagesSoFar = 0
     fig = plt.figure()
@@ -67,6 +56,7 @@ def VisualizeModel(model, numImages=6):
             if imagesSoFar == numImages:
                 return
 
+# TODO: Look deeper into T-SNE
 try: from sklearn.manifold import TSNE; HAS_SK = True
 except: HAS_SK = False; print('Please install sklearn for layer visualization')
 def plot_with_labels(lowDWeights, labels):
@@ -82,7 +72,8 @@ def ToVar(tensor):
     return Variable(tensor)
 
 # Check t-SNE for details
-def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetLoaders, datasetSizes, trainAccuracyArray,
+def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, 
+						datasetLoaders, datasetSizes, trainAccuracyArray,
                         testAccuracyArray, lrLogArray, trainErrorArray, testErrorArray, num_epochs=25):
     since = time.time()
     del trainAccuracyArray[:]
@@ -102,35 +93,32 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetLoader
         # Each epoch has a training and validation phase
         for phase in ['train', 'test']:
             if phase == 'train':
-                # optimizer, currentLr = lr_scheduler(optimizer, epoch)
                 currentLr = lr_scheduler.get_lr()
                 lr_scheduler.step()
-
                 print('LR: ' + str(currentLr))
+
                 model.train(True)  # Set model to training mode
             else:
                 model.train(False)  # Set model to evaluate mode
+
             running_loss = 0.0
             running_corrects = 0
 
             # Iterate over data.
             for i, (inputs, labels) in enumerate(datasetLoaders[phase]):
                 # wrap them in Variable
-                if torch.cuda.is_available():
-                    inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
-                else:
-                    inputs, labels = Variable(inputs), Variable(labels)
+                inputs, labels = ToVar(inputs), ToVar(labels)
 
                 #Debug images
                 #ImShow(torchvision.utils.make_grid(inputs.data.cpu()), mean=[0.544, 0.544, 0.544], std=[0.056, 0.056, 0.056], title=labels)
 
-                # zero the parameter gradients
+                # Zero the gradients
                 optimizer.zero_grad()
 
-                # forward, backward, optimize
+                # Forward, backward, optimize
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
-                # backward + optimize only if in training phase
+                # Backward + optimize only if in training phase
                 if phase == 'train':
                     loss.backward()
                     optimizer.step()
@@ -144,9 +132,12 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetLoader
 
                 #if i % 50 == 0:
                 if True == False:
+                	# Minibatch specific info
                     print('epoch {} batch {}/{} loss {:.3f}'.format(
                                 epoch, i, len(datasetLoaders[phase]), loss.data[0]))
                     pred_y = preds[1].squeeze()
+
+                    # t-SNE visualization
                     if HAS_SK:
                         # Visualization of trained flatten layer (T-SNE)
                         tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
@@ -157,8 +148,6 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetLoader
 
             epoch_loss = running_loss / datasetSizes[phase]
             epoch_acc = running_corrects / datasetSizes[phase]
-
-            
             
             if phase == 'train':
                 trainErrorArray.append(epoch_loss)
@@ -187,7 +176,7 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetLoader
     print('Best val Acc: {:4f}'.format(best_acc))
     return best_model
 
-
+# Missing in current PyTorch Windows
 class _LRScheduler(object):
     def __init__(self, optimizer, last_epoch=-1):
         if not isinstance(optimizer, torch.optim.Optimizer):
@@ -216,6 +205,7 @@ class _LRScheduler(object):
         for param_group, lr in zip(self.optimizer.param_groups, self.get_lr()):
             param_group['lr'] = lr
 
+# Missing in current PyTorch Windows
 class StepLR(_LRScheduler):
     """Sets the learning rate of each parameter group to the initial lr
     decayed by gamma every step_size epochs. When last_epoch=-1, sets
@@ -248,6 +238,7 @@ class StepLR(_LRScheduler):
         return [base_lr * self.gamma ** (self.last_epoch // self.step_size)
                 for base_lr in self.base_lrs]
 
+# Missing in current PyTorch Windows
 class ReduceLROnPlateau(object):
     """Reduce learning rate when a metric has stopped improving.
     Models often benefit from reducing the learning rate by a factor
@@ -390,6 +381,7 @@ class ReduceLROnPlateau(object):
             self.is_better = lambda a, best: a > best + threshold
             self.mode_worse = -float('Inf')
 
+# Missing in current PyTorch Windows
 def alpha_dropout(input, p=0.5, training=False):
     r"""Applies alpha dropout to the input.
     See :class:`~torch.nn.AlphaDropout` for details.
@@ -418,6 +410,7 @@ def alpha_dropout(input, p=0.5, training=False):
 
     return output.mul_(a).add_(b)
 
+# Missing in current PyTorch Windows
 class AlphaDropout(nn.Module):
     r"""Applies Alpha Dropout over the input.
 
@@ -468,7 +461,7 @@ class AlphaDropout(nn.Module):
         return self.__class__.__name__ + ' (' \
             + 'p = ' + str(self.p) + ')'
 
-    
+# Missing in current PyTorch Windows
 class SELU_THNN(torch.autograd.function.InplaceFunction):
     alpha = 1.6732632423543772848170429916717
     scale = 1.0507009873554804934193349852946
@@ -514,9 +507,11 @@ class SELU_THNN(torch.autograd.function.InplaceFunction):
                                                      negative_mask * (output / SELU_THNN.scale + SELU_THNN.alpha))
         return grad_input, None
 
+# Missing in current PyTorch Windows
 def selu(input, inplace=False):
     return SELU_THNN.apply(input, inplace)
 
+# Missing in current PyTorch Windows
 class SELU(nn.Module):
     """Applies element-wise, :math:`f(x) = scale * (\max(0,x) + \min(0, alpha * (\exp(x) - 1)))`,
     with ``alpha=1.6732632423543772848170429916717`` and ``scale=1.0507009873554804934193349852946``.
@@ -570,7 +565,6 @@ def PlotArrays(arrays, labels, xlabel, ylabel, title):
     p.legend.location = 'bottom_left'
     show(p)
 
-import math
 def plotNNFilter(units):
     print(units.shape)
     filters = units.shape[0]
@@ -585,18 +579,50 @@ def plotNNFilter(units):
         plt.imshow(units[i,0,:,:], interpolation="nearest", cmap="gray")
         
 def DetermineAccuracy(phase, datasetLoaders):
+	tp = 0
+	fp = 0
+	tn = 0
+	fn = 0
     correct = 0
     total = 0
+
     for data in datasetLoaders[phase]:
         # Inputs
         inputs, labels = data
-        if torch.cuda.is_available():
-            inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
-        else:
-            inputs, labels = Variable(inputs), Variable(labels)
+        inputs, labels = ToVar(inputs), ToVar(labels)
 
         outputs = net(inputs)
         _, predicted = torch.max(outputs.data, 1)
+
         total += labels.size(0)
+
+        # TP, FP, TN, FN
+        for iResult in range(len(predicted)):
+        	# TP or TN
+        	if predicted[iResult] == labels.data[iResult]: 
+        		# TP (defect)
+        		if labels.data[iResult] == 1:
+        			tp += 1
+        		# TN (non-defect)
+        		else:
+        			tn += 1
+        	# FP or FN
+        	else:
+        		# FP
+        		if labels.data[iResult] == 0:
+        			fp += 1
+        		# TN
+        		else:
+        			tn += 1
+
         correct += (predicted == labels.data).sum()
+
+    # Sanity
+    assert total == (tp + tn + fp + fn)
+
+    accuracy = (tp + tn) / (tp + tn + fp + fn)
+    precision = tp / (tp + fp)
+    # Also known as sensitivity
+    recall = tp / (tp + fn)
+    specificity = tn / (tn + fp)
     return correct, total
