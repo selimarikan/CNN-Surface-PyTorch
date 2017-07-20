@@ -1,7 +1,7 @@
 .idea
-*.net
 /mnist
 /results
 /data
 /.ipynb_checkpoints
 /cifar
+/tblogs
