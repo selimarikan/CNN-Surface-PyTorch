@@ -22,6 +22,12 @@ import os
 import PIL
 plt.ion()
 
+grads = {}
+def save_grad(name):
+    def hook(grad):
+        grads[name] = grad
+    return hook
+
 def ImShow(input, mean, std, title=None):
     input = input.numpy().transpose((1, 2, 0))
     input = std * input + mean
@@ -579,10 +585,10 @@ def plotNNFilter(units):
         plt.imshow(units[i,0,:,:], interpolation="nearest", cmap="gray")
         
 def DetermineAccuracy(phase, datasetLoaders):
-	tp = 0
-	fp = 0
-	tn = 0
-	fn = 0
+    tp = 0
+    fp = 0
+    tn = 0
+    fn = 0
     correct = 0
     total = 0
 
@@ -598,22 +604,22 @@ def DetermineAccuracy(phase, datasetLoaders):
 
         # TP, FP, TN, FN
         for iResult in range(len(predicted)):
-        	# TP or TN
-        	if predicted[iResult] == labels.data[iResult]: 
-        		# TP (defect)
-        		if labels.data[iResult] == 1:
-        			tp += 1
-        		# TN (non-defect)
-        		else:
-        			tn += 1
-        	# FP or FN
-        	else:
-        		# FP
-        		if labels.data[iResult] == 0:
-        			fp += 1
-        		# TN
-        		else:
-        			tn += 1
+            # TP or TN
+            if predicted[iResult] == labels.data[iResult]:
+                # TP (defect)
+                if labels.data[iResult] == 1:
+                    tp += 1
+                # TN (non-defect)
+                else:
+                    tn += 1
+            # FP or FN
+            else:
+                # FP
+                if labels.data[iResult] == 0:
+                    fp += 1
+                # TN
+                else:
+                    tn += 1
 
         correct += (predicted == labels.data).sum()
 
@@ -625,4 +631,5 @@ def DetermineAccuracy(phase, datasetLoaders):
     # Also known as sensitivity
     recall = tp / (tp + fn)
     specificity = tn / (tn + fp)
-    return correct, total
+    return correct, total, [accuracy, precision, recall, specificity]
+    
