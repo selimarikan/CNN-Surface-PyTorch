@@ -77,23 +77,45 @@ def ToVar(tensor):
         tensor = tensor.cuda()
     return Variable(tensor)
 
+def SaveCheckpoint(state, checkpointName='checkpoint.pth'):
+    #filename = os.path.join(path, checkpointName)
+    torch.save(state, checkpointName)
+
+  # save_checkpoint({
+  #           'epoch': epoch + 1,
+  #           'model': args.model,
+  #           'config': args.model_config,
+  #           'state_dict': model.state_dict(),
+  #           'best_prec1': best_prec1,
+  #           'regime': regime
+  #       }, is_best, path=save_path)
+
 # Check t-SNE for details
 def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, 
 						datasetLoaders, datasetSizes, trainAccuracyArray,
-                        testAccuracyArray, lrLogArray, trainErrorArray, testErrorArray, num_epochs=25):
+                        testAccuracyArray, lrLogArray, trainErrorArray, testErrorArray, 
+                        startingEpoch = 0, num_epochs=25, saveInterval=5):
     since = time.time()
+
+    # Clear training arrays
     del trainAccuracyArray[:]
     del testAccuracyArray[:]
     del lrLogArray[:]
     del trainErrorArray[:]
     del testErrorArray[:]
 
+    # Set initial values
     best_model = model
     best_acc = 0.0
     currentLr = 0
 
-    for epoch in range(num_epochs):
-        print('Epoch {}/{}'.format(epoch, num_epochs - 1))
+    # Check if saveInterval is meaningful
+    if saveInterval < 0:
+        saveInterval = 5
+
+    # For given number of epochs
+    for epoch in range(startingEpoch, startingEpoch + num_epochs):
+        print('Epoch {}/{}'.format(epoch, startingEpoch + num_epochs - 1))
         print('-' * 10)
 
         # Each epoch has a training and validation phase
@@ -112,10 +134,10 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler,
 
             # Iterate over data.
             for i, (inputs, labels) in enumerate(datasetLoaders[phase]):
-                # wrap them in Variable
+                # Wrap them in Variable
                 inputs, labels = ToVar(inputs), ToVar(labels)
 
-                #Debug images
+                # Debug images
                 #ImShow(torchvision.utils.make_grid(inputs.data.cpu()), mean=[0.544, 0.544, 0.544], std=[0.056, 0.056, 0.056], title=labels)
 
                 # Zero the gradients
@@ -173,7 +195,19 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler,
                 best_acc = epoch_acc
                 best_model = copy.deepcopy(model)
 
+
         print() 
+
+        # Save network on each given interval
+        if epoch % saveInterval == 0:
+            SaveCheckpoint({
+                'epoch': epoch + 1,
+                'state_dict': model.state_dict(),
+                'optimizer' : optimizer.state_dict(),
+            }, str(epoch) + 'checkpoint.pth')
+            #'arch': args.arch,
+            #'best_prec1': best_prec1,
+
         del inputs, labels, loss, outputs
         gc.collect()
 
@@ -632,4 +666,3 @@ def DetermineAccuracy(phase, datasetLoaders):
     recall = tp / (tp + fn)
     specificity = tn / (tn + fp)
     return correct, total, [accuracy, precision, recall, specificity]
-    
