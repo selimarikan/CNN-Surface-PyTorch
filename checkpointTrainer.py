@@ -23,7 +23,8 @@ if __name__ == '__main__':
     parser.add_argument('--startepoch', default=0, type=int, metavar='N', help='manual epoch number (useful on restarts)')
     parser.add_argument('--dataset', required=True, help='path of images to train and test, point to parent folder of train and test subfolders')
     parser.add_argument('--imagesize', default=128, type=int, help='images will be scaled to this size')
-    parser.add_argument('--lr', default=0.0001, type=float, help='images will be scaled to this size')
+    parser.add_argument('--lr', default=0.0001, type=float, help='starting learning rate (if you are resuming, this value will be overwritten)')
+    parser.add_argument('--numepochs', default=10, type=int, help='how many epochs for training')
 
     opt = parser.parse_args()
 
@@ -31,6 +32,7 @@ if __name__ == '__main__':
     setMean = [0.5, 0.5, 0.5]
     setStd = [0.5, 0.5, 0.5]
     outputClassCount = 2
+    setImageSize = opt.imagesize
 
     # 1. Create network
     net = DSMNLNet(setMean, setStd, setImageSize, outputClassCount)
@@ -62,7 +64,6 @@ if __name__ == '__main__':
     if opt.dataset == '':
         print('Image path cannot be empty')
 
-    setImageSize = opt.imagesize
 
     # 2.1. Set the image transforms
     dataTransforms = {
@@ -108,7 +109,7 @@ if __name__ == '__main__':
 
     cnnUtils.TrainModelMiniBatch(net, criterion, optimizer, lrScheduler, datasetLoaders, datasetSizes, 
         trainAccuracyArray, testAccuracyArray, lrLogArray, trainErrorArray, testErrorArray, 
-        opt.startepoch, num_epochs=10)
+        opt.startepoch, num_epochs=opt.numepochs)
 
 
     # 3. Prediction
