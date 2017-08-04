@@ -12,6 +12,7 @@ from bokeh.layouts import gridplot
 from bokeh.plotting import figure, show, output_file
 from bokeh.palettes import Spectral7
 from bokeh.io import output_notebook
+import visdom
 #from graphviz import Digraph
 import numpy as np
 import gc
@@ -97,6 +98,8 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler,
                         startingEpoch = 0, num_epochs=25, saveInterval=5):
     since = time.time()
 
+    #vis = visdom.Visdom()
+
     # Clear training arrays
     del trainAccuracyArray[:]
     del testAccuracyArray[:]
@@ -134,6 +137,10 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler,
 
             # Iterate over data.
             for i, (inputs, labels) in enumerate(datasetLoaders[phase]):
+
+
+                #vis.images(inputs.numpy(), opts=dict(title='Input images', caption='How random.'), win=2)
+
                 # Wrap them in Variable
                 inputs, labels = ToVar(inputs), ToVar(labels)
 
@@ -214,6 +221,12 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler,
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
     print('Best val Acc: {:4f}'.format(best_acc))
+
+    SaveCheckpoint({
+                'epoch': epoch + 1,
+                'state_dict': best_model    .state_dict(),
+                'optimizer' : optimizer.state_dict(),
+            }, 'bestcheckpoint.pth')
     return best_model
 
 # Missing in current PyTorch Windows

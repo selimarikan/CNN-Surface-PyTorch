@@ -11,7 +11,7 @@ import copy
 import os
 import argparse
 import cnnUtils
-from neuralNets import DSMNLNet
+from neuralNets import DSMNLNet256
 
 float_formatter = lambda x: "%.2f" % x
 
@@ -31,12 +31,12 @@ if __name__ == '__main__':
     # Should be average in the end.
     setMean = [0.5, 0.5, 0.5]
     setStd = [0.5, 0.5, 0.5]
-    outputClassCount = 2
+    outputClassCount = 2    
     setImageSize = opt.imagesize
 
     # 1. Create network
-    net = DSMNLNet(setMean, setStd, setImageSize, outputClassCount)
-    criterion = nn.CrossEntropyLoss()
+    net = DSMNLNet256(setMean, setStd, setImageSize, outputClassCount)
+    criterion = nn.NLLLoss()
     optimizer = optim.RMSprop(net.parameters(), lr=opt.lr, weight_decay=0.01)
 
     if torch.cuda.is_available():
