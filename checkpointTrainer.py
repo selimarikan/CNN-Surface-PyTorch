@@ -9,6 +9,7 @@ import time
 import math
 import copy
 import os
+import datetime
 import argparse
 import cnnUtils
 from neuralNets import DSMNLNet256
@@ -25,17 +26,35 @@ if __name__ == '__main__':
     parser.add_argument('--imagesize', default=128, type=int, help='images will be scaled to this size')
     parser.add_argument('--lr', default=0.0001, type=float, help='starting learning rate (if you are resuming, this value will be overwritten)')
     parser.add_argument('--numepochs', default=10, type=int, help='how many epochs for training')
+    parser.add_argument('--outdim', default=2, type=int, help='output dimension of the network (class count)')
+    parser.add_argument('--net', default='dsmnl', type=str, help='choose network architecture to be used. Options are: dsmnl, alexnet, resnet, densenet')
+
+    logFileName = 'CheckpointTrainerLog.txt'
+    logF = cnnUtils.TXTLogger(logFileName)
+    logF.Log('------- Started CheckpointTrainer -------')
+    logF.Log(str(parser))
 
     opt = parser.parse_args()
 
     # Should be average in the end.
     setMean = [0.5, 0.5, 0.5]
     setStd = [0.5, 0.5, 0.5]
-    outputClassCount = 2    
+    outputClassCount = opt.outdim
     setImageSize = opt.imagesize
 
     # 1. Create network
-    net = DSMNLNet256(setMean, setStd, setImageSize, outputClassCount)
+    if opt.net == 'dsmnl':
+        net = DSMNLNet256(setMean, setStd, setImageSize, outputClassCount)
+    elif opt.net == 'alexnet':
+        net = torchvision.models.alexnet()
+        net.classifier[6].out_features = opt.outdim
+    elif opt.net == 'resnet':
+        net = torchvision.models.resnet18()
+        net.fc.out_features = opt.outdim
+    else:
+        print('Unknown network name')
+        exit()
+
     criterion = nn.NLLLoss()
     optimizer = optim.RMSprop(net.parameters(), lr=opt.lr, weight_decay=0.01)
 
@@ -111,6 +130,23 @@ if __name__ == '__main__':
         trainAccuracyArray, testAccuracyArray, lrLogArray, trainErrorArray, testErrorArray, 
         opt.startepoch, num_epochs=opt.numepochs)
 
+    # Print relevant statistics
+    correct, total, [accuracy, precision, recall, specificity] = cnnUtils.DetermineAccuracy(net, 'test', datasetLoaders)
+    statText = 'Accuracy: ' + str(accuracy) + ' Precision: ' + str(precision) + ' Recall: ' + str(recall) + ' Specificity: ' + str(specificity)
+    print(statText)
+
+    logF.Log(statText)
+
+    logF.Log('Training set accuracy values')
+    logF.Log(trainAccuracyArray)
+    logF.Log('Test set accuracy values')
+    logF.Log(testAccuracyArray)
+    logF.Log('Learning rate values')
+    logF.Log(lrLogArray)
+    logF.Log('Training error values')
+    logF.Log(trainErrorArray)
+    logF.Log('Test error values')
+    logF.Log(testErrorArray)
 
     # 3. Prediction
     #for i in range(4):
