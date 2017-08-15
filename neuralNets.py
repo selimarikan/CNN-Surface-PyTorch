@@ -493,50 +493,50 @@ class DSMNLNet256(nn.Module):
         super(DSMNLNet256, self).__init__()
         self.convIn = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=(5,5), stride=(2,2), padding=(6,6), dilation=(3,3))
         self.batNIn = nn.BatchNorm2d(num_features=64)
-        self.reluIn = nn.ReLU()
+        self.reluIn = nn.PReLU()
         
         self.convIA = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(3,3))
         self.batNIA = nn.BatchNorm2d(num_features=64)
-        self.reluIA = nn.ReLU()
+        self.reluIA = nn.PReLU()
                 
         self.convI2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(5,5), stride=(2,2), padding=(6,6), dilation=(3,3))
         self.batNI2 = nn.BatchNorm2d(num_features=128)
-        self.reluI2 = nn.ReLU()
+        self.reluI2 = nn.PReLU()
         
         self.convIB = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(3,3))
         self.batNIB = nn.BatchNorm2d(num_features=128)
-        self.reluIB = nn.ReLU()
+        self.reluIB = nn.PReLU()
         
         # Out CH = 256 !
         self.convI3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(5,5), stride=(2,2), padding=(6,6), dilation=(3,3))
         self.batNI3 = nn.BatchNorm2d(num_features=256)
-        self.reluI3 = nn.ReLU()
+        self.reluI3 = nn.PReLU()
         
         self.convIC = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(3,3))
         self.batNIC = nn.BatchNorm2d(num_features=256)
-        self.reluIC = nn.ReLU()
+        self.reluIC = nn.PReLU()
         
         # Extended nonlinearity
         self.convI4 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(3,3))
         self.batNI4 = nn.BatchNorm2d(num_features=256)
-        self.reluI4 = nn.ReLU()
+        self.reluI4 = nn.PReLU()
         
         self.convI5 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(3,3))
         self.batNI5 = nn.BatchNorm2d(num_features=256)
-        self.reluI5 = nn.ReLU()
+        self.reluI5 = nn.PReLU()
         
         self.convI6 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(3,3))
         self.batNI6 = nn.BatchNorm2d(num_features=256)
-        self.reluI6 = nn.ReLU()
+        self.reluI6 = nn.PReLU()
             
         self.outMul = int(setImageSize / 8) 
             
         self.fc = nn.Sequential(
-            nn.Linear(256 * self.outMul * self.outMul, outputClassCount))
-            #nn.ReLU(inplace=True),
+            nn.Linear(256 * self.outMul * self.outMul, outputClassCount),
+            #nn.ReLU(), # Enabling ReLU makes network stuck at some level
             #nn.Dropout(p=0.5),
             #nn.Linear(4096, len(datasetClasses))) # number of classes
-        
+            )
         self.logsmax = nn.LogSoftmax()
 
     def forward(self, x):
