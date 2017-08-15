@@ -15,6 +15,7 @@ from bokeh.io import output_notebook
 import visdom
 #from graphviz import Digraph
 import numpy as np
+import datetime
 import gc
 import time
 import math
@@ -631,7 +632,7 @@ def plotNNFilter(units):
         plt.axis('off')
         plt.imshow(units[i,0,:,:], interpolation="nearest", cmap="gray")
         
-def DetermineAccuracy(phase, datasetLoaders):
+def DetermineAccuracy(net, phase, datasetLoaders):
     tp = 0
     fp = 0
     tn = 0
@@ -679,3 +680,11 @@ def DetermineAccuracy(phase, datasetLoaders):
     recall = tp / (tp + fn)
     specificity = tn / (tn + fp)
     return correct, total, [accuracy, precision, recall, specificity]
+
+class TXTLogger:
+    def __init__(self, fileName):
+        self.f = open(fileName, 'a')
+    # Writes log message into open file
+    def Log(self, message):
+        self.f.write(str(datetime.datetime.now()) + ': ' + message + '\n')
+        self.f.flush()
