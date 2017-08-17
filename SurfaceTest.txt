@@ -170,3 +170,21 @@ Surface tests      |    Train   |   Test    |   Time    |   Epoch   |   Image*  
 01- DSMNL               0.950       0.873       07m40s      10          128         10          EBAviles
 02- ResNet              0.934       0.763       14m52s      10          224         10          EBAviles
 03- DSMNL               0.963       0.871       14m45s      10          224         10          EBAviles
+
+
+
+2017-08-17
+
+Default EBAviles 498 defect - 470 non-defect
+Augmented EBAviles 578 defect (+16%) - 622 non-defect (+32%)
+Augmentation contains both inter-class samples and individual class fakes
+
+Surface tests      | Train | Test  | Confusion   |  Time  | Epoch | Image | Batch | Set       | Notes
+-------------------------------------------------------------------------------------------------------------
+01- DSMNLNet         0.954   0.815   0.988 0.315    09m33s   10     128      10     EBAviles    
+02- DSMNLNet         0.944   0.888   0.960 0.726    09m21s   10     128      10     EBAviles
+03- DSMNLNet         0.939   0.858   0.959 0.631    10m31s   10     128      10     EBAviles
+04- DSMNLNet         0.963   0.863   0.989 0.381    16m21s   10     224      10     EBAviles
+05- DSMNLNet         0.949   0.935   0.957 0.887    10m43s   10     128      10     EBAvilesAug
+06- DSMNLNet         0.960   0.940   0.971 0.734    10m54s   10     128      10     EBAvilesAug
+
