@@ -65,8 +65,8 @@ def VisualizeModel(model, numImages=6):
                 return
 
 # TODO: Look deeper into T-SNE
-try: from sklearn.manifold import TSNE; HAS_SK = True
-except: HAS_SK = False; print('Please install sklearn for layer visualization')
+#try: from sklearn.manifold import TSNE; HAS_SK = True
+#except: HAS_SK = False; print('Please install sklearn for layer visualization')
 def plot_with_labels(lowDWeights, labels):
     plt.cla()
     X, Y = lowDWeights[:, 0], lowDWeights[:, 1]
@@ -125,8 +125,8 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler,
         # Each epoch has a training and validation phase
         for phase in ['train', 'test']:
             if phase == 'train':
-                currentLr = lr_scheduler.get_lr()
                 lr_scheduler.step()
+                currentLr = lr_scheduler.get_lr()
                 print('LR: ' + str(currentLr))
 
                 model.train(True)  # Set model to training mode
@@ -166,15 +166,15 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler,
                 running_loss += loss.data[0]
                 running_corrects += torch.sum(preds == labels.data)
 
-                #if i % 50 == 0:
-                if True == False:
+                if i % 50 == 0:
+                #if True == False:
                 	# Minibatch specific info
                     print('epoch {} batch {}/{} loss {:.3f}'.format(
                                 epoch, i, len(datasetLoaders[phase]), loss.data[0]))
                     pred_y = preds[1].squeeze()
 
-                    # t-SNE visualization
-                    if HAS_SK:
+                    # t-SNE visualization : LATER!
+                    if False:
                         # Visualization of trained flatten layer (T-SNE)
                         tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
                         plot_only = 500
@@ -653,7 +653,7 @@ def DetermineAccuracy(net, phase, datasetLoaders):
         # TP, FP, TN, FN
         for iResult in range(len(predicted)):
             # TP or TN
-            if predicted[iResult] == labels.data[iResult]:
+            if predicted[iResult].cpu().numpy() == labels.data[iResult]:
                 # TP (defect)
                 if labels.data[iResult] == 1:
                     tp += 1
@@ -680,6 +680,38 @@ def DetermineAccuracy(net, phase, datasetLoaders):
     recall = tp / (tp + fn)
     specificity = tn / (tn + fp)
     return correct, total, [accuracy, precision, recall, specificity]
+
+def CalculateConfusion(net, datasetClasses, testLoader):
+    datasetLen = len(datasetClasses)
+    classCorrect = list(0. for i in range(datasetLen))
+    classTotal = list(0. for i in range(datasetLen))
+    confusion = torch.zeros(datasetLen, datasetLen)
+
+    for i, data in enumerate(testLoader):
+        inputs, labels = data
+        inputs, labels = ToVar(inputs), ToVar(labels)
+    
+        outputs = net(inputs)
+        _, predicted = torch.max(outputs.data, 1)
+
+        classTotal[labels.data.cpu().numpy()[0]] += 1
+        confusion[labels.data.cpu().numpy()[0]][predicted[0][0]] += 1
+    
+        if labels.data.cpu().numpy()[0] == predicted.cpu().numpy()[0][0]:
+            classCorrect[labels.data.cpu().numpy()[0]] += 1
+        #else: # Display failure cases
+            #out = torchvision.utils.make_grid(inputs.data.cpu())
+            #cnnUtils.ImShow(out, mean=setMean, std=setStd, title=datasetClasses[labels.data.cpu()[0]])
+
+    for i, cls in enumerate(classCorrect):
+        print('Class ' + datasetClasses[i] + ' total: ' + str(classTotal[i]) + ' correct: ' + str(classCorrect[i]) + ' success rate is ' + str(100 * classCorrect[i] / classTotal[i])) 
+
+    # Normalize confusion matrix
+    for i in range(datasetLen):
+        confusion[i] = confusion[i] / confusion[i].sum()
+
+    return confusion
+  
 
 class TXTLogger:
     def __init__(self, fileName):
