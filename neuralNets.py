@@ -593,20 +593,20 @@ class DSRNLNet256(nn.Module):
         self.batNIn = nn.BatchNorm2d(num_features=64)
         self.reluIn = nn.PReLU()
         
-        self.convIA = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(3,3))
+        self.convIA = nn.Conv2d(in_channels=64, out_channels=32, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(3,3))
         self.batNIA = nn.BatchNorm2d(num_features=64)
         self.reluIA = nn.PReLU()
                 
-        self.convI2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(5,5), stride=(2,2), padding=(6,6), dilation=(3,3))
+        self.convI2 = nn.Conv2d(in_channels=32, out_channels=128, kernel_size=(5,5), stride=(2,2), padding=(6,6), dilation=(3,3))
         self.batNI2 = nn.BatchNorm2d(num_features=128)
         self.reluI2 = nn.PReLU()
         
-        self.convIB = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(3,3))
-        self.batNIB = nn.BatchNorm2d(num_features=128)
+        self.convIB = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(3,3))
+        self.batNIB = nn.BatchNorm2d(num_features=64)
         self.reluIB = nn.PReLU()
         
         # Out CH = 256 !
-        self.convI3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(5,5), stride=(2,2), padding=(6,6), dilation=(3,3))
+        self.convI3 = nn.Conv2d(in_channels=64, out_channels=256, kernel_size=(5,5), stride=(2,2), padding=(6,6), dilation=(3,3))
         self.batNI3 = nn.BatchNorm2d(num_features=256)
         self.reluI3 = nn.PReLU()
         

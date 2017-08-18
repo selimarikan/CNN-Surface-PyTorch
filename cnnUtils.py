@@ -12,7 +12,7 @@ from bokeh.layouts import gridplot
 from bokeh.plotting import figure, show, output_file
 from bokeh.palettes import Spectral7
 from bokeh.io import output_notebook
-import visdom
+#import visdom
 #from graphviz import Digraph
 import numpy as np
 import datetime
