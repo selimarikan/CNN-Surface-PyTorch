@@ -61,28 +61,28 @@ if __name__ == '__main__':
         net = net.cuda()
         criterion = criterion.cuda()
 
-    if opt.resumepoint:
-        if os.path.isfile(opt.resumepoint):
-            print("=> loading checkpoint '{}'".format(opt.resumepoint))
-            checkpoint = torch.load(opt.resumepoint)
-            opt.startepoch = checkpoint['epoch']
-            #best_prec1 = checkpoint['best_prec1']
-            net.load_state_dict(checkpoint['state_dict'])
-            optimizer.load_state_dict(checkpoint['optimizer'])
-            print("=> loaded checkpoint '{}' (epoch {})"
-                  .format(opt.resumepoint, checkpoint['epoch']))
-        else:
-            print("=> no checkpoint found at '{}'".format(opt.resumepoint))
-
-    lrScheduler = cnnUtils.StepLR(optimizer, step_size=5, gamma=0.85, last_epoch=opt.startepoch - 1)
-
-    torch.backends.cudnn.benchmark = True
-
     # 2. Load the images
     if opt.dataset == '':
         print('Image path cannot be empty')
         exit()
 
+    if opt.resumepoint:
+        resumePath = os.path.join(opt.dataset, opt.resumepoint)
+        if os.path.isfile(resumePath):
+            print("=> loading checkpoint '{}'".format(resumePath))
+            checkpoint = torch.load(resumePath)
+            opt.startepoch = checkpoint['epoch']
+            #best_prec1 = checkpoint['best_prec1']
+            net.load_state_dict(checkpoint['state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer'])
+            print("=> loaded checkpoint '{}' (epoch {})"
+                  .format(resumePath, checkpoint['epoch']))
+        else:
+            print("=> no checkpoint found at '{}'".format(resumePath))
+
+    lrScheduler = cnnUtils.StepLR(optimizer, step_size=5, gamma=0.85, last_epoch=opt.startepoch - 1)
+
+    torch.backends.cudnn.benchmark = True
 
     # 2.1. Set the image transforms
     dataTransforms = {
