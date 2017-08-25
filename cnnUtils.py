@@ -79,9 +79,9 @@ def ToVar(tensor):
         tensor = tensor.cuda()
     return Variable(tensor)
 
-def SaveCheckpoint(state, checkpointName='checkpoint.pth'):
-    #filename = os.path.join(path, checkpointName)
-    torch.save(state, checkpointName)
+def SaveCheckpoint(state, datasetPath, checkpointName='checkpoint.pth'):
+    filename = os.path.join(datasetPath, checkpointName)
+    torch.save(state, filename)
 
   # save_checkpoint({
   #           'epoch': epoch + 1,
@@ -93,7 +93,7 @@ def SaveCheckpoint(state, checkpointName='checkpoint.pth'):
   #       }, is_best, path=save_path)
 
 # Check t-SNE for details
-def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, 
+def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetPath,
 						datasetLoaders, datasetSizes, trainAccuracyArray,
                         testAccuracyArray, lrLogArray, trainErrorArray, testErrorArray, 
                         startingEpoch = 0, num_epochs=25, saveInterval=5):
@@ -208,11 +208,13 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler,
 
         # Save network on each given interval
         if epoch % saveInterval == 0:
+            checkpointName = str(epoch) + 'checkpoint.pth'
             SaveCheckpoint({
                 'epoch': epoch + 1,
                 'state_dict': model.state_dict(),
                 'optimizer' : optimizer.state_dict(),
-            }, str(epoch) + 'checkpoint.pth')
+            }, datasetPath, checkpointName)
+            print('Checkpoint saved: ' + checkpointName)
             #'arch': args.arch,
             #'best_prec1': best_prec1,
 
@@ -227,7 +229,7 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler,
                 'epoch': epoch + 1,
                 'state_dict': best_model    .state_dict(),
                 'optimizer' : optimizer.state_dict(),
-            }, 'bestcheckpoint.pth')
+            }, datasetPath, 'bestcheckpoint.pth')
     return best_model
 
 # Missing in current PyTorch Windows

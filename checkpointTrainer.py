@@ -74,7 +74,7 @@ if __name__ == '__main__':
         else:
             print("=> no checkpoint found at '{}'".format(opt.resumepoint))
 
-    lrScheduler = cnnUtils.StepLR(optimizer, step_size=3, gamma=0.85, last_epoch=opt.startepoch - 1)
+    lrScheduler = cnnUtils.StepLR(optimizer, step_size=5, gamma=0.85, last_epoch=opt.startepoch - 1)
 
     torch.backends.cudnn.benchmark = True
 
@@ -155,7 +155,7 @@ if __name__ == '__main__':
     testErrorArray = []
 
     # Set the network back so that best model is used for metrics
-    net = cnnUtils.TrainModelMiniBatch(net, criterion, optimizer, lrScheduler, datasetLoaders, datasetSizes, 
+    net = cnnUtils.TrainModelMiniBatch(net, criterion, optimizer, lrScheduler, opt.dataset, datasetLoaders, datasetSizes, 
         trainAccuracyArray, testAccuracyArray, lrLogArray, trainErrorArray, testErrorArray, 
         opt.startepoch, num_epochs=opt.numepochs)
 
