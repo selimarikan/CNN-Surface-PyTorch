@@ -208,7 +208,7 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetPath,
 
         # Save network on each given interval
         if epoch % saveInterval == 0:
-            checkpointName = str(epoch) + 'checkpoint.pth'
+            checkpointName = type(model).__name__ + '_' + str(epoch) + 'checkpoint.pth'
             SaveCheckpoint({
                 'epoch': epoch + 1,
                 'state_dict': model.state_dict(),
@@ -229,7 +229,7 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetPath,
                 'epoch': epoch + 1,
                 'state_dict': best_model    .state_dict(),
                 'optimizer' : optimizer.state_dict(),
-            }, datasetPath, 'bestcheckpoint.pth')
+            }, datasetPath, type(model).__name__ + '_bestcheckpoint.pth')
     return best_model
 
 # Missing in current PyTorch Windows

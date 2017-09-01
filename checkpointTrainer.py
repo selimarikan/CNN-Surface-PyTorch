@@ -13,6 +13,8 @@ import datetime
 import argparse
 import cnnUtils
 from neuralNets import DSMNLNet256
+from neuralNets import DSMNLNet256v2
+from neuralNets import NetBNOptim
 
 float_formatter = lambda x: "%.2f" % x
 
@@ -44,17 +46,34 @@ if __name__ == '__main__':
     # 1. Create network
     if opt.net == 'dsmnl':
         net = DSMNLNet256(setMean, setStd, setImageSize, outputClassCount)
+        criterion = nn.NLLLoss()
+    
+    elif opt.net == 'experimental':
+        net = DSMNLNet256v2(setMean, setStd, setImageSize, outputClassCount)
+        criterion = nn.NLLLoss()
+
+    elif opt.net == 'bnoptim':
+        net = NetBNOptim(setImageSize, outputClassCount)
+        criterion = nn.NLLLoss()
+
     elif opt.net == 'alexnet':
         net = torchvision.models.alexnet()
         net.classifier[6].out_features = opt.outdim
+        criterion = nn.CrossEntropyLoss()
+
+    elif opt.net == 'vgg':
+        net = torchvision.models.vgg16_bn(num_classes=opt.outdim)
+        criterion = nn.CrossEntropyLoss()
+
     elif opt.net == 'resnet':
         net = torchvision.models.resnet18()
         net.fc.out_features = opt.outdim
+        criterion = nn.CrossEntropyLoss()
+
     else:
         print('Unknown network name')
         exit()
 
-    criterion = nn.NLLLoss()
     optimizer = optim.RMSprop(net.parameters(), lr=opt.lr, weight_decay=0.01)
 
     if torch.cuda.is_available():
