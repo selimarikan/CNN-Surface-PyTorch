@@ -188,3 +188,74 @@ Surface tests      | Train | Test  | Confusion   |  Time  | Epoch | Image | Batc
 05- DSMNLNet         0.949   0.935   0.957 0.887    10m43s   10     128      10     EBAvilesAug
 06- DSMNLNet         0.960   0.940   0.971 0.734    10m54s   10     128      10     EBAvilesAug
 07- DSMNLNet         0.987   0.931   0.938 0.910    25m04s   30     128      10     EBAvilesAug
+
+
+2017-08-28
+
+EBAvilesKN dataset contains 7723 training images, 3848 test images
+Surface tests      | Train | Test  | Confusion   |  Time  | Epoch | Image | Batch | Set         | Notes
+-------------------------------------------------------------------------------------------------------------
+01- DSMNLNet         0.976   0.911   0.936 0.822    26m51s   10     128      10     EBAvilesKN   Epoch 0-10  lr=0.0001, wd=0.01
+02- DSMNLNet         0.985   0.919   0.957 0.843    21m28s   10     128      10     EBAvilesKN   Epoch 10-20
+03- DSMNLNet         0.989   0.918   0.952 0.846    21m40s   10     128      10     EBAvilesKN   Epoch 20-30
+04- NetBNOptim       0.968   0.932   0.960 0.888    25m02s   10     128      10     EBAvilesKN   Epoch 0-10  lr=0.0001, wd=0.01 
+05- NetBNOptim       0.974   0.919   0.963 0.845    23m50s   10     128      10     EBAvilesKN   Epoch 10-20
+06- AlexNet          0.954   0.889   0.000 0.000    35m**s   05     224      10     EBAvilesKN   Epoch 0-10  lr=0.0001, wd=0.01
+07- ResNet           0.955   0.845   0.000 0.000    35m**s   05     224      10     EBAvilesKN   Epoch 0-10  lr=0.0001, wd=0.01
+08- DSMNLNetv2       0.975   0.873   0.931 0.759    67m01s   10     128      10     EBAvilesKN   Epoch 0-10  lr=0.0001, wd=0.01 7x7 input, 4096 fc with dropout
+09- DSMNLNetv2       0.975   0.891   0.965 0.747    24m26s   10     128      10     EBAvilesKN   Epoch 0-10  lr=0.0001, wd=0.01 residuals added to first 3 1x1 conv layers
+
+2017-09-02
+EBA and Aviles individual best results
+Surface tests      | Train | Test  | Confusion   |  Time  | Epoch | Image | Batch | Set         | Notes
+-------------------------------------------------------------------------------------------------------------
+01- DSMNLNet          0.980   0.983   0.972 0.992   10m06s   30     128      10     EBA           Epoch 0-10  lr=0.0001, wd=0.01
+02- DSMNLNet          0.990   0.990   0.983 0.984   09m26s   60(30+)128      10     EBA           Epoch 
+03- DSMNLNet          0.998   0.999   0.994(1) 0.984(2)   09m26s   90(30+)128      10     EBA           Epoch
+04- DSMNLNet          0.999   0.877   0.976 0.889   16m57s   30     128      10     Aviles           Epoch 0-10  lr=0.0001, wd=0.01
+05- DSMNLNet          0.999   0.930   0.963 0.858   16m32s   60(30+)128      10     Aviles           Epoch   
+06- DSMNLNet          0.999   0.897   0.975 0.723   16m16s   90(60+)128      10     Aviles           Epoch Overfit
+
+07- DSMNLNetv2        0.997   0.955   0.964 0.927   16m27s   30     128      10     Aviles           Epoch 0-10  lr=0.0001, wd=0.01
+08- DSMNLNetv2        0.999   0.955   0.971 0.928   16m33s   60(30+)128      10     Aviles           Epoch 
+09- DSMNLNetv2        0.999   0.940   0.945 0.923   15m17s   90(30+)128      10     Aviles           Epoch Overfit
+
+2017-09-07
+EBA 
+Surface tests      | Train | Test  | Confusion   |  Time  | Epoch | Image | Batch | Set         | Notes
+-------------------------------------------------------------------------------------------------------------
+01- DSMNLNetv2       0.978   0.983   0.955 0.992   09m55s   30      128     10      EBA           lr=0.0001, wd=0.01
+02- Experim. LPBPHP  0.929   0.935   0.883 0.992   03m44s   10      128     10      EBA           lr=0.0001, wd=0.01
+03- Experim. LPBPHP  0.948   0.954   0.972 0.907   03m24s   20(+10) 128     10      EBA           lr=0.0001, wd=0.01
+04- Experim. LPBPHP  0.940   0.964   0.955 0.984   03m20s   30(+10) 128     10      EBA           lr=0.0001, wd=0.01
+05- Experim. LPBPHP  0.975   0.987   0.955 0.992   03m20s   40(+10) 128     10      EBA           lr=0.0001, wd=0.01
+06- Experim. LPBPHP  0.973   0.987   0.972 0.992   03m22s   50(+10) 128     10      EBA           lr=0.0001, wd=0.01
+
+07- Experim. LPBPHP  0.988   0.897   0.969 0.765   08m09s   10      128     10      Aviles        lr=0.0001, wd=0.01
+08- Experim. LPBPHP  0.999   0.938   0.951 0.893   10m02s   20(+10) 128     10      Aviles        lr=0.0001, wd=0.01
+09- Experim. LPBPHP  0.994   0.914   0.978 0.775   06m30s   30(+10) 128     10      Aviles        lr=0.0001, wd=0.01
+10- Experim. LPBPHP  0.999   0.923   0.913 0.944   07m03s   40(+10) 128     10      Aviles        lr=0.0001, wd=0.01 FASTER THAN DSMNLv2
+
+11- Experim. LPBPHP  0.591   0.510   0.000 0.000   06m53s   10      128     10      MultiSet      lr=0.0001, wd=0.01
+12- Experim. LPBPHP  0.737   0.568   0.000 0.000   06m39s   20(+10) 128     10      MultiSet      lr=0.0001, wd=0.01
+13- Experim. LPBPHP  0.801   0.585   0.000 0.000   06m40s   30(+10) 128     10      MultiSet      lr=0.0001, wd=0.01
+14- Experim. LPBPHP  0.849   0.624   0.000 0.000   06m39s   40(+10) 128     10      MultiSet      lr=0.0001, wd=0.01
+15- Experim. LPBPHP  0.885   0.635   0.000 0.000   06m39s   50(+10) 128     10      MultiSet      lr=0.0001, wd=0.01
+16- Experim. LPBPHP  0.899   0.653   0.000 0.000   06m39s   60(+10) 128     10      MultiSet      lr=0.0001, wd=0.01
+17- Experim. LPBPHP  0.908   0.651   0.000 0.000   06m39s   70(+10) 128     10      MultiSet      lr=0.0001, wd=0.01
+18- Experim. LPBPHP  0.922   0.660   0.000 0.000   06m39s   80(+10) 128     10      MultiSet      lr=0.0001, wd=0.01
+19- Experim. LPBPHP  0.929   0.672   0.000 0.000   06m39s   90(+10) 128     10      MultiSet      lr=0.0001, wd=0.01
+20- Experim. LPBPHP  0.935   0.667   0.000 0.000   06m39s  100(+10) 128     10      MultiSet      lr=0.0001, wd=0.01
+21- Experim. LPBPHP  0.936   0.666   0.000 0.000   06m39s  110(+10) 128     10      MultiSet      lr=0.0001, wd=0.01
+22- Experim. LPBPHP  0.938   0.669   0.000 0.000   06m39s  120(+10) 128     10      MultiSet      lr=0.0001, wd=0.01
+23- Experim. LPBPHP  0.939   0.675   0.000 0.000   06m39s  130(+10) 128     10      MultiSet      lr=0.0001, wd=0.01
+24- Experim. LPBPHP  0.948   0.674   0.000 0.000   06m39s  140(+10) 128     10      MultiSet      lr=0.0001, wd=0.01
+25- Experim. LPBPHP  0.942   0.684   0.000 0.000   19m60s  170(+30) 128     10      MultiSet      lr=0.0001, wd=0.01
+26- Experim. LPBPHP  0.955   0.683   0.000 0.000   19m60s  200(+30) 128     10      MultiSet      lr=0.0001, wd=0.01
+
+2017-09-09
+EBAviles 
+Surface tests      | Train | Test  | Confusion   |  Time  | Epoch | Image | Batch | Set         | Notes
+-------------------------------------------------------------------------------------------------------------
+01- DSMNLNetv2       0.978   0.983   0.955 0.992   09m55s   30      128     10      EBAviles      lr=0.0001, wd=0.01
+02- Experim. LPBPHP  0.985   0.943   0.922 0.983   25m32s   30      128     10      EBAviles      lr=0.0001, wd=0.01
