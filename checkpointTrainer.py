@@ -14,6 +14,7 @@ import argparse
 import cnnUtils
 from neuralNets import DSMNLNet256
 from neuralNets import DSMNLNet256v2
+from neuralNets import ExperimentalNet
 from neuralNets import NetBNOptim
 
 float_formatter = lambda x: "%.2f" % x
@@ -29,7 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', default=0.0001, type=float, help='starting learning rate (if you are resuming, this value will be overwritten)')
     parser.add_argument('--numepochs', default=10, type=int, help='how many epochs for training')
     parser.add_argument('--outdim', default=2, type=int, help='output dimension of the network (class count)')
-    parser.add_argument('--net', default='dsmnl', type=str, help='choose network architecture to be used. Options are: dsmnl, alexnet, resnet, densenet')
+    parser.add_argument('--net', default='dsmnl', type=str, help='choose network architecture to be used. Options are: dsmnl, alexnet, resnet, vgg')
 
     logFileName = 'CheckpointTrainerLog.txt'
     logF = cnnUtils.TXTLogger(logFileName)
@@ -47,9 +48,13 @@ if __name__ == '__main__':
     if opt.net == 'dsmnl':
         net = DSMNLNet256(setMean, setStd, setImageSize, outputClassCount)
         criterion = nn.NLLLoss()
+
+    elif opt.net == 'dsmnlv2':
+        net = DSMNLNet256v2(setMean, setStd, setImageSize, outputClassCount)
+        criterion = nn.NLLLoss()
     
     elif opt.net == 'experimental':
-        net = DSMNLNet256v2(setMean, setStd, setImageSize, outputClassCount)
+        net = ExperimentalNet(setMean, setStd, setImageSize, outputClassCount)
         criterion = nn.NLLLoss()
 
     elif opt.net == 'bnoptim':
@@ -69,6 +74,17 @@ if __name__ == '__main__':
         net = torchvision.models.resnet18()
         net.fc.out_features = opt.outdim
         criterion = nn.CrossEntropyLoss()
+
+    elif opt.net == 'resnet152pt':
+        net = torchvision.models.resnet152(pretrained=True)
+        net.fc.out_features = opt.outdim
+        criterion = nn.CrossEntropyLoss()
+    
+    elif opt.net == 'densenet':
+        net = torchvision.models.densenet121()
+        net.fc.out_features = opt.outdim
+        criterion = nn.CrossEntropyLoss()
+
 
     else:
         print('Unknown network name')
