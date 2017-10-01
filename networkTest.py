@@ -11,19 +11,28 @@ import argparse
 import cnnUtils
 from neuralNets import DSMNLNet
 
+# Steps
+# ----------------------------------
+# - Choose network arch
+# - Load weights
+# - 
+# - Output class probabilities. Write code suitable for binary and multi-class
+# - Write all results to a new TXT file
+
+
 float_formatter = lambda x: "%.2f" % x
 
 if __name__ == '__main__':
     np.set_printoptions(formatter={'float_kind':float_formatter})
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--network', required=True, help='path of neural network to use')
+    parser.add_argument('--net', default='dsmnl', type=str, help='choose network architecture to be used. Options are: dsmnl, alexnet, resnet, vgg')
+    parser.add_argument('--checkpoint', required=True, help='path of neural network to use')
     parser.add_argument('--images', required=True, help='path of images to predict')
     parser.add_argument('--batchSize', type=int, default=10, help='how many images to be loaded in one batch')
     parser.add_argument('--imageSize', type=int, default=128, help='what should be the image size for network input')
 
     opt = parser.parse_args()
-
     net = None
     
     # Should be average in the end.
@@ -31,7 +40,7 @@ if __name__ == '__main__':
     setStd = [0.5, 0.5, 0.5]
 
     # 1. Load the network
-    if opt.network == '':
+    if opt.checkpoint == '':
         print('Network path cannot be empty')
 
     net = torch.load(opt.network)

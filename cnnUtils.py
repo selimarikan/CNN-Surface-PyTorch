@@ -713,7 +713,6 @@ def CalculateConfusion(net, datasetClasses, testLoader):
         confusion[i] = confusion[i] / confusion[i].sum()
 
     return confusion
-  
 
 class TXTLogger:
     def __init__(self, fileName):
@@ -722,3 +721,18 @@ class TXTLogger:
     def Log(self, message):
         self.f.write(str(datetime.datetime.now()) + ': ' + message + '\n')
         self.f.flush()
+
+def EvaluateInference(net, testLoader, testCount=10):
+    times = np.zeros(testCount)
+    for i in range(times.size):
+        input, label = next(iter(testLoader))
+        input, label = ToVar(input), ToVar(label)
+
+        startT = time.perf_counter()
+        outputs = net(input)
+        endT = time.perf_counter()
+        
+        timems = (endT-startT) * 1000
+        times[i] = timems
+        print(str(timems) + ' ms')
+    return (str(np.mean(times))  + ' ms')

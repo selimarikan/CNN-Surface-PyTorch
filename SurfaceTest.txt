@@ -257,5 +257,60 @@ Surface tests      | Train | Test  | Confusion   |  Time  | Epoch | Image | Batc
 EBAviles 
 Surface tests      | Train | Test  | Confusion   |  Time  | Epoch | Image | Batch | Set         | Notes
 -------------------------------------------------------------------------------------------------------------
-01- DSMNLNetv2       0.978   0.983   0.955 0.992   09m55s   30      128     10      EBAviles      lr=0.0001, wd=0.01
+01- DSMNLNetv2       0.982   0.919   0.892 0.952   24m48s   30      128     10      EBAviles      lr=0.0001, wd=0.01
 02- Experim. LPBPHP  0.985   0.943   0.922 0.983   25m32s   30      128     10      EBAviles      lr=0.0001, wd=0.01
+
+2017-09-10
+MultiSet
+Surface tests      | Train | Test  | Confusion   |  Time  | Epoch | Image | Batch | Set         | Notes
+-------------------------------------------------------------------------------------------------------------
+01- ResNet18PT       0.869   0.802   0.000 0.000   12m02s   10      224     10      MultiSet      lr=0.0001, wd=0.01
+02- ResNet18PT       0.923   0.828   0.000 0.000   10m52s   20(+10) 224     10      MultiSet      lr=0.0001, wd=0.01
+03- ResNet18PT       0.962   0.836   0.000 0.000   10m06s   30(+10) 224     10      MultiSet      lr=0.0001, wd=0.01
+04- ResNet18PT       0.973   0.835   0.000 0.000   10m06s   40(+10) 224     10      MultiSet      lr=0.0001, wd=0.01
+
+05- DSMNLNet         0.988   0.993   0.988 1.000   09m44s   30      128     10      EBA           lr=0.0001, wd=0.01
+06- DSMNLNetv2       0.988   0.990   0.983 1.000   09m49s   30      128     10      EBA           lr=0.0001, wd=0.01
+07- Experim. LPBPHP  0.985   0.983   0.972 1.000   11m04s   30      128     10      EBA           lr=0.0001, wd=0.01
+
+
+2017-09-30 : RESULTS
+EBA
+Surface tests      | Train | Test  | Confusion   |  Time  | Epoch | Image | Batch | Set  | InfT - Notes
+-------------------------------------------------------------------------------------------------------------
+01- BNOptimNet       0.995   0.996  180/181 130/130  08m06s   30      128     10    EBA    6.01ms lr=0.0001, wd=0.01
+02- DSMNLNet         0.976   0.983  177/181 129/130  09m11s   30      128     10    EBA    6.31ms lr=0.0001, wd=0.01
+03- DSMNLNetv2       0.962   0.977  177/181 127/130  09m12s   30      128     10    EBA    7.31ms lr=0.0001, wd=0.01
+04- HPBPLP           0.972   0.983  176/181 130/130  10m27s   30      128     10    EBA    11.31ms lr=0.0001, wd=0.01
+
+Aviles
+Surface tests    | Train | Test  | Confusion     |  Time  | Epoch | Image | Batch | Set  | InfT - Notes
+-------------------------------------------------------------------------------------------------------------
+01- BNOptimNet    0.997   0.953  2345/2382 1026/1155 15m55s   30      128     10    Avi    5.7ms lr=0.0001, wd=0.01
+02- DSMNLNet      0.980   0.931  2301/2382 0995/1155 16m10s   30      128     10    Avi    7.1ms lr=0.0001, wd=0.01
+03- DSMNLNetv2    0.991   0.950  2307/2382 1054/1155 16m14s   30      128     10    Avi    8.31ms lr=0.0001, wd=0.01
+04- HPBPLP        0.994   0.907  2137/2382 1072/1155 17m25s   30      128     10    Avi    11.91ms lr=0.0001, wd=0.01
+
+EBAviles
+Surface tests    | Train | Test  | Confusion     |  Time  | Epoch | Image | Batch | Set  | InfT - Notes
+-------------------------------------------------------------------------------------------------------------
+01- BNOptimNet    0.984   0.943  2463/2563 1169/1285 18m33s   30      128     10    EBAvi  5.7ms lr=0.0001, wd=0.01
+02- DSMNLNet      0.974   0.911  2386/2563 1120/1285 19m10s   30      128     10    EBAvi  6.4ms lr=0.0001, wd=0.01
+03- DSMNLNetv2    0.975   0.915  2384/2563 1137/1285 19m30s   30      128     10    EBAvi  7.9ms lr=0.0001, wd=0.01
+04- HPBPLP        0.994   0.907  2494/2563 0969/1285 21m19s   30      128     10    EBAvi  14.22ms lr=0.0001, wd=0.01
+
+EBAOffAug
+Surface tests      | Train | Test  | Confusion   |  Time  | Epoch | Image | Batch | Set  | InfT - Notes
+-------------------------------------------------------------------------------------------------------------
+01- BNOptimNet       0.992   0.993  179/181 130/130  11m35s   30      128     10    EBAOffA  5.75ms lr=0.0001, wd=0.01
+02- DSMNLNet         0.985   0.980  176/181 129/130  16m19s   30      128     10    EBAOffA  7.01ms lr=0.0001, wd=0.01
+03- DSMNLNetv2       0.984   0.980  175/181 130/130  16m17s   30      128     10    EBAOffA  7.31ms lr=0.0001, wd=0.01
+04- HPBPLP           0.982   0.977  174/181 130/130  20m15s   30      128     10    EBAOffA  11.61ms lr=0.0001, wd=0.01
+
+EBAvilesKN Big
+Surface tests      | Train | Test  | Confusion       |   Time  | Epoch | Image | Batch | Set  | InfT - Notes
+-------------------------------------------------------------------------------------------------------------
+01- BNOptimNet       0.959   0.988  2798/2825 4279/4337  49m06s   10    128     10    EBAviKN  5.6ms lr=0.0001, wd=0.01
+02- DSMNLNet         0.xxx   0.xxx  176/2825 129/1285  16m19s   10    128     10    EBAviKN  7.01ms lr=0.0001, wd=0.01
+03- DSMNLNetv2       0.971   0.833  2500/2825 3959/1285  50m27s   10    128     10    EBAviKN  7.31ms lr=0.0001, wd=0.01
+04- HPBPLP           0.975   0.787  2561/2825 0674/1285  38m15s   10    128     10    EBAviKN  11.61ms lr=0.0001, wd=0.01

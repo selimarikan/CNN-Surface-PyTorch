@@ -12,10 +12,7 @@ import os
 import datetime
 import argparse
 import cnnUtils
-from neuralNets import DSMNLNet256
-from neuralNets import DSMNLNet256v2
-from neuralNets import ExperimentalNet
-from neuralNets import NetBNOptim
+import neuralNets
 
 float_formatter = lambda x: "%.2f" % x
 
@@ -44,51 +41,8 @@ if __name__ == '__main__':
     outputClassCount = opt.outdim
     setImageSize = opt.imagesize
 
-    # 1. Create network
-    if opt.net == 'dsmnl':
-        net = DSMNLNet256(setMean, setStd, setImageSize, outputClassCount)
-        criterion = nn.NLLLoss()
-
-    elif opt.net == 'dsmnlv2':
-        net = DSMNLNet256v2(setMean, setStd, setImageSize, outputClassCount)
-        criterion = nn.NLLLoss()
-    
-    elif opt.net == 'experimental':
-        net = ExperimentalNet(setMean, setStd, setImageSize, outputClassCount)
-        criterion = nn.NLLLoss()
-
-    elif opt.net == 'bnoptim':
-        net = NetBNOptim(setImageSize, outputClassCount)
-        criterion = nn.NLLLoss()
-
-    elif opt.net == 'alexnet':
-        net = torchvision.models.alexnet()
-        net.classifier[6].out_features = opt.outdim
-        criterion = nn.CrossEntropyLoss()
-
-    elif opt.net == 'vgg':
-        net = torchvision.models.vgg16_bn(num_classes=opt.outdim)
-        criterion = nn.CrossEntropyLoss()
-
-    elif opt.net == 'resnet':
-        net = torchvision.models.resnet18()
-        net.fc.out_features = opt.outdim
-        criterion = nn.CrossEntropyLoss()
-
-    elif opt.net == 'resnet152pt':
-        net = torchvision.models.resnet152(pretrained=True)
-        net.fc.out_features = opt.outdim
-        criterion = nn.CrossEntropyLoss()
-    
-    elif opt.net == 'densenet':
-        net = torchvision.models.densenet121()
-        net.fc.out_features = opt.outdim
-        criterion = nn.CrossEntropyLoss()
-
-
-    else:
-        print('Unknown network name')
-        exit()
+    # 1. Create network and loss criterion
+    net, criterion = neuralNets.CreateNet(opt.net, setMean, setStd, setImageSize, outputClassCount)
 
     optimizer = optim.RMSprop(net.parameters(), lr=opt.lr, weight_decay=0.01)
 
@@ -126,13 +80,13 @@ if __name__ == '__main__':
         transforms.RandomCrop(setImageSize),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize(mean=setMean, std=setStd)
+        #transforms.Normalize(mean=setMean, std=setStd)
     ]),
     'test': transforms.Compose([
         transforms.Scale(setImageSize),
-        transforms.RandomCrop(setImageSize),
+        transforms.CenterCrop(setImageSize),
         transforms.ToTensor(),
-        transforms.Normalize(mean=setMean, std=setStd)
+        #transforms.Normalize(mean=setMean, std=setStd)
     ]), }
 
     datasets = { 'train' : [], 'test': []}
@@ -218,6 +172,11 @@ if __name__ == '__main__':
 
     confusionMat = cnnUtils.CalculateConfusion(net, datasetClasses, testLoader)
     logF.Log(''.join(str(x.numpy()) for x in confusionMat))
+
+    infTime = cnnUtils.EvaluateInference(net, testLoader)
+    infText = 'Inference time: ' + infTime
+    print(infText)
+    logF.Log(infText)
 
     logF.Log('------- Finished CheckpointTrainer -------')
     # 3. Prediction
