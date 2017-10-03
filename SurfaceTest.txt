@@ -312,5 +312,43 @@ Surface tests      | Train | Test  | Confusion       |   Time  | Epoch | Image |
 -------------------------------------------------------------------------------------------------------------
 01- BNOptimNet       0.959   0.988  2798/2825 4279/4337  49m06s   10    128     10    EBAviKN  5.6ms lr=0.0001, wd=0.01
 02- DSMNLNet         0.xxx   0.xxx  176/2825 129/1285  16m19s   10    128     10    EBAviKN  7.01ms lr=0.0001, wd=0.01
-03- DSMNLNetv2       0.971   0.833  2500/2825 3959/1285  50m27s   10    128     10    EBAviKN  7.31ms lr=0.0001, wd=0.01
-04- HPBPLP           0.975   0.787  2561/2825 0674/1285  38m15s   10    128     10    EBAviKN  11.61ms lr=0.0001, wd=0.01
+03- DSMNLNetv2       0.971   0.833  2500/2825 3959/4337  50m27s   10    128     10    EBAviKN  7.31ms lr=0.0001, wd=0.01
+04- HPBPLP           0.975   0.960  2656/2825 4222/4337  52m00s   10    128     10    EBAviKN  11.61ms lr=0.0001, wd=0.01
+05- DSMNLNetv3       0.967   0.920  2416/2825 4177/4337  49m21s   10    128     10    EBAviKN  7.05ms dilation 3
+
+EBAvilesKN Mini
+Surface tests      | Train | Test  | Confusion       |   Time  | Epoch | Image | Batch | Set  | InfT - Notes
+-------------------------------------------------------------------------------------------------------------
+!!01- BNOptimNet     0.944   0.945  2736/2825 4033/4337  10m02s   10    128     10    EBAviKN  5.4ms lr=0.0001, wd=0.01
+*02- DSMNLNetv2       0.971   0.833  2500/2825 3959/4337  50m27s   10    128     10    EBAviKN  7.31ms lr=0.0001, wd=0.01
+03- HPBPLP           0.954   0.960  1238/2825 3677/4337  12m06s   10    128     10    EBAviKN  10.6ms lr=0.0001, wd=0.01
+04- DSMNLNetv3       0.948   0.660  0800/2825 3933/4337  12m12s   10    128     10    EBAviKN  6.3ms dilation 3
+05- DSMNLNetv4       0.961   0.713  1473/2825 3640/4337  10m42s   10    128     10    EBAviKN  7.05ms dilation 1
+06- DSMNLNetv5       0.931   0.748  1325/2825 4035/4337  11m13s   10    128     10    EBAviKN  6.75ms dilation 1, linear, relu
+07- DSMNLNetv5       0.948   0.812  1898/2825 3923/4337  12m36s   10    128     10    EBAviKN  7.37ms dilation 1, 3xlinear, relu
+08- DSMNLNetv6       0.928   0.741  2181/2825 3128/4337  12m44s   10    128     10    EBAviKN  8.27ms dilation 1, 3xlinear, relu
+09- DSMNLNetv7       0.922   0.876  2745/2825 3531/4337  11m44s   10    128     10    EBAviKN  6.5ms dilation 1, 3xlinear, relu
+10- DSMNLNetv7       0.922   0.789  2053/2825 3598/4337  11m23s   10    128     10    EBAviKN  6.5ms dilation 1, 3xlinear, relu
+11- ChannelNet       0.948   0.656  0695/2825 4008/4337  11m23s   10    128     10    EBAviKN  9.5ms 
+!!12- BNOptimNet     0.931   0.706  xxxx/2825 xxxx/4337  11m49s   10    128     10    EBAviKN  9.5ms 
+
+EBAvilesKN Mini
+Surface tests      | Train | Test  | Confusion       |   Time  | Epoch | Image | Batch | Set  | InfT - Notes
+-------------------------------------------------------------------------------------------------------------
+01- BNOptimNet     0.974   0.940  2747/2825 4000/4337  35m00s     30     128     10    EBAviKN  5.72ms lr=0.0001, wd=0.01
+02- DSMNLNetv2     0.977   0.749  1467/2825 3902/4337  30m34s     30     128     10    EBAviKN  7.44ms lr=0.0001, wd=0.01
+03- HPBPLP         0.983   0.814  1805/2825 4025/4337  30m37s     30     128     10    EBAviKN  11.7ms lr=0.0001, wd=0.01
+04- DSMNLNetv7     0.970   0.826  2002/2825 3914/4337  32m42s     30     128     10    EBAviKN  7.62ms dilation 1, 3xlinear, relu
+05- BNOptimNet     0.951   0.951  2785/2825 4030/4337  30m21s     30     128     10    EBAviKN  5.72ms lr=0.0001, wd=0.01
+
+EBAvilesKN Big
+Surface tests      | Train | Test  | Confusion       |   Time  | Epoch | Image | Batch | Set  | InfT - Notes
+-------------------------------------------------------------------------------------------------------------
+*01- BNOptimNet       0.959   0.988  2798/2825 4279/4337  49m06s   10    128     10    EBAviKN  5.6ms lr=0.0001, wd=0.01
+*02- DSMNLNet         0.xxx   0.xxx  176/2825 129/1285  16m19s   10    128     10    EBAviKN  7.01ms lr=0.0001, wd=0.01
+*03- DSMNLNetv2       0.971   0.833  2500/2825 3959/4337  52m27s   10    128     10    EBAviKN  7.31ms lr=0.0001, wd=0.01
+04- HPBPLP           0.974   0.950  2742/2825 4067/4337  52m10s   10    128     10    EBAviKN  11.31ms lr=0.0001, wd=0.01
+04- HPBPLP           0.982   0.962  2750/2825 4142/4337  46m47s   20(+10) 128     10    EBAviKN  11.31ms lr=0.0001, wd=0.01
+04- HPBPLP           0.986   0.978  2777/2825 4229/4337  45m57s   30(+10) 128     10    EBAviKN  11.31ms lr=0.0001, wd=0.01
+04- HPBPLP           0.989   0.966  2734/2825 4186/4337  46m28s   40(+10) 128     10    EBAviKN  11.31ms lr=0.0001, wd=0.01
+*05- DSMNLNetv3       0.967   0.920  2416/2825 4177/4337  49m21s   10    128     10    EBAviKN  7.05ms dilation 3
