@@ -32,12 +32,17 @@ def save_grad(name):
 
 def ImShow(input, mean, std, title=None):
     input = input.numpy().transpose((1, 2, 0))
-    input = std * input + mean
+    #input = std * input + mean
     plt.figure(dpi=96)
     plt.imshow(input)
     if title is not None:
         plt.title(title)
     plt.pause(0.001)
+
+def ImSave(input, mean, std, title=None):
+    input = input.numpy().transpose((1, 2, 0))
+    input = std * input + mean
+    plt.savefig(title + '.png')
 
 # TODO: Do we still need this?
 def VisualizeModel(model, numImages=6):
@@ -669,7 +674,7 @@ def DetermineAccuracy(net, phase, datasetLoaders):
                     fp += 1
                 # TN
                 else:
-                    tn += 1
+                    fn += 1
 
         correct += (predicted == labels.data).sum()
 
@@ -701,9 +706,10 @@ def CalculateConfusion(net, datasetClasses, testLoader):
     
         if labels.data.cpu().numpy()[0] == predicted.cpu().numpy()[0][0]:
             classCorrect[labels.data.cpu().numpy()[0]] += 1
-        #else: # Display failure cases
-            #out = torchvision.utils.make_grid(inputs.data.cpu())
-            #cnnUtils.ImShow(out, mean=setMean, std=setStd, title=datasetClasses[labels.data.cpu()[0]])
+        else: # Display failure cases
+            out = torchvision.utils.make_grid(inputs.data.cpu())
+            #ImShow(out, mean=0.5, std=0.5, title=datasetClasses[labels.data.cpu()[0]])
+            #ImSave(out, 0.5, 0.5, str(i) + str(datasetClasses[labels.data.cpu()[0]]))
 
     for i, cls in enumerate(classCorrect):
         print('Class ' + datasetClasses[i] + ' total: ' + str(classTotal[i]) + ' correct: ' + str(classCorrect[i]) + ' success rate is ' + str(100 * classCorrect[i] / classTotal[i])) 

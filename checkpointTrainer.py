@@ -24,7 +24,10 @@ if __name__ == '__main__':
     parser.add_argument('--startepoch', default=0, type=int, metavar='N', help='manual epoch number (useful on restarts)')
     parser.add_argument('--dataset', required=True, help='path of images to train and test, point to parent folder of train and test subfolders. Alternatively mnist, cifar10 values can be used.')
     parser.add_argument('--imagesize', default=128, type=int, help='images will be scaled to this size')
+    parser.add_argument('--batchsize', default=10, type=int, help='number of images to be loaded for each mini-batch')
     parser.add_argument('--lr', default=0.0001, type=float, help='starting learning rate (if you are resuming, this value will be overwritten)')
+    parser.add_argument('--l2', default=0.01, type=float, help='weight_decay strength')
+    parser.add_argument('--lrdecay', default=0.8, type=float, help='learning rate decay multiplier')
     parser.add_argument('--numepochs', default=10, type=int, help='how many epochs for training')
     parser.add_argument('--outdim', default=2, type=int, help='output dimension of the network (class count)')
     parser.add_argument('--net', default='dsmnl', type=str, help='choose network architecture to be used. Options are: dsmnl, alexnet, resnet, vgg')
@@ -35,21 +38,30 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     logF.Log(str(opt))
 
-    # Should be average in the end.
-    setMean = [0.5, 0.5, 0.5]
-    setStd = [0.5, 0.5, 0.5]
+    # Aviles values
+    setMean = [0.429, 0.429, 0.429]
+    setStd = [0.021, 0.021, 0.021]
     outputClassCount = opt.outdim
     setImageSize = opt.imagesize
 
     # 1. Create network and loss criterion
     net, criterion = neuralNets.CreateNet(opt.net, setMean, setStd, setImageSize, outputClassCount)
 
-    optimizer = optim.RMSprop(net.parameters(), lr=opt.lr, weight_decay=0.01)
+    optimizer = optim.RMSprop(net.parameters(), lr=opt.lr, weight_decay=opt.l2)
 
     if torch.cuda.is_available():
         net = net.cuda()
         criterion = criterion.cuda()
 
+    for m in net.modules():
+        if isinstance(m, nn.Conv2d):
+            n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+            m.weight.data.normal_(0, math.sqrt(2. / n))
+
+        elif isinstance(m, nn.BatchNorm2d):
+            m.weight.data.fill_(1)
+            m.bias.data.zero_()
+    print('Weights initialized!')
     # 2. Load the images
     if opt.dataset == '':
         print('Image path cannot be empty')
@@ -69,7 +81,8 @@ if __name__ == '__main__':
         else:
             print("=> no checkpoint found at '{}'".format(resumePath))
 
-    lrScheduler = cnnUtils.StepLR(optimizer, step_size=5, gamma=0.85, last_epoch=opt.startepoch - 1)
+    lrScheduler = cnnUtils.StepLR(optimizer, step_size=3, gamma=opt.lrdecay, last_epoch=opt.startepoch - 1)
+    #lrScheduler = cnnUtils.StepLR(optimizer, step_size=3, gamma=0.1, last_epoch=opt.startepoch - 1)
 
     torch.backends.cudnn.benchmark = True
 
@@ -80,13 +93,13 @@ if __name__ == '__main__':
         transforms.RandomCrop(setImageSize),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        #transforms.Normalize(mean=setMean, std=setStd)
+        transforms.Normalize(mean=setMean, std=setStd)
     ]),
     'test': transforms.Compose([
         transforms.Scale(setImageSize),
         transforms.CenterCrop(setImageSize),
         transforms.ToTensor(),
-        #transforms.Normalize(mean=setMean, std=setStd)
+        transforms.Normalize(mean=setMean, std=setStd)
     ]), }
 
     datasets = { 'train' : [], 'test': []}
@@ -120,7 +133,7 @@ if __name__ == '__main__':
         datasets = {x: torchvision.datasets.ImageFolder(os.path.join(opt.dataset, x), dataTransforms[x]) for x in ['train', 'test']}
         datasetClasses = datasets['train'].classes
 
-    datasetLoaders = {x: torch.utils.data.DataLoader(datasets[x], batch_size=10, shuffle=True, num_workers=4, pin_memory=True) for x in ['train', 'test']}
+    datasetLoaders = {x: torch.utils.data.DataLoader(datasets[x], batch_size=opt.batchsize, shuffle=True, num_workers=4, pin_memory=True) for x in ['train', 'test']}
     testLoader = torch.utils.data.DataLoader(datasets['test'], batch_size=1, shuffle=False, num_workers=1, pin_memory=True)
 
     datasetSizes = {x: len(datasets[x]) for x in ['train', 'test']}

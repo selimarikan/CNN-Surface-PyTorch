@@ -9,7 +9,7 @@ import copy
 import os
 import argparse
 import cnnUtils
-from neuralNets import DSMNLNet
+import neuralNets
 
 # Steps
 # ----------------------------------
@@ -33,22 +33,31 @@ if __name__ == '__main__':
     parser.add_argument('--imageSize', type=int, default=128, help='what should be the image size for network input')
 
     opt = parser.parse_args()
-    net = None
     
     # Should be average in the end.
     setMean = [0.5, 0.5, 0.5]
     setStd = [0.5, 0.5, 0.5]
 
+    # Create net
+    net, criterion = neuralNets.CreateNet(opt.net, setMean, setStd, opt.imageSize, outputClassCount=2)
+    
     # 1. Load the network
     if opt.checkpoint == '':
         print('Network path cannot be empty')
 
-    net = torch.load(opt.network)
+    checkpoint = torch.load(opt.checkpoint)
+    net.load_state_dict(checkpoint['state_dict'])
+    print("=> loaded checkpoint '{}' (epoch {})".format(opt.checkpoint, checkpoint['epoch']))
+
+    print(net)
     if net is not None:
         print('Loaded the network successfully')
     if torch.cuda.is_available():
         net = net.cuda()
 
+    # Set model for testing
+    net.eval()
+    
     # 2. Load the images
     if opt.images == '':
         print('Image path cannot be empty')
@@ -59,16 +68,16 @@ if __name__ == '__main__':
     dataTransform = {
     'test': transforms.Compose([
         transforms.Scale(setImageSize),
-        transforms.RandomCrop(setImageSize),
+        transforms.CenterCrop(setImageSize),
         transforms.ToTensor(),
-        transforms.Normalize(mean=setMean, std=setStd)
+        #transforms.Normalize(mean=setMean, std=setStd)
     ]), }
 
     # 2.2. Create dataset and loader
     dataset = torchvision.datasets.ImageFolder(opt.images, dataTransform['test'])
-    datasetLoader = torch.utils.data.DataLoader(dataset, batch_size=4, shuffle=True, num_workers=4, pin_memory=True)
+    #datasetLoader = torch.utils.data.DataLoader(dataset, batch_size=4, shuffle=True, num_workers=4, pin_memory=True)
     testLoader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=1, pin_memory=True)
-    print(datasetLoader)
+    #print(datasetLoader)
     datasetSize = len(dataset)
     datasetClasses = dataset.classes
 
@@ -76,39 +85,8 @@ if __name__ == '__main__':
     print('GPU will ' + ('' if torch.cuda.is_available() else 'not ') + 'be used.' )
     print(str(len(datasetClasses)) + ' output classes')
 
-    # 2.3. Load a sample batch
-    sampleInputs, sampleClasses = next(iter(datasetLoader))
-
-    # 2.4. Sanity check
-    if sampleInputs.size()[0] != sampleClasses.size()[0]:
-        print('Dataset is not loaded correctly. ')
-
-    # 3. Prediction
-    #for i in range(4):
-    #    sampleInputs, sampleClasses = next(iter(datasetLoader))
-    #    sampleOutputs = net(cnnUtils.ToVar(sampleInputs))
-    #    _, samplePreds = torch.max(sampleOutputs.data, 1)
-    #    print(sampleClasses.cpu().numpy())
-    #    print(samplePreds.cpu().numpy())
-    #    print(sampleOutputs.cpu().data.numpy())
-
-    datasetLen = len(datasetClasses)
-    classCorrect = list(0. for i in range(datasetLen))
-    classTotal = list(0. for i in range(datasetLen))
-
-    for i, data in enumerate(testLoader):
-        inputs, labels = data
-        inputs, labels = cnnUtils.ToVar(inputs), cnnUtils.ToVar(labels)
-    
-        outputs = net(inputs)
-        _, predicted = torch.max(outputs.data, 1)
-
-        classTotal[labels.data.cpu().numpy()[0]] += 1
-    
-        if labels.data.cpu().numpy()[0] == predicted.cpu().numpy()[0][0]:
-            classCorrect[labels.data.cpu().numpy()[0]] += 1
-        print(str(i) + '/' + str(datasetSize))
-
-    for i, cls in enumerate(classCorrect):
-        if classTotal[i] > 0:
-            print('Class ' + datasetClasses[i] + ' total: ' + str(classTotal[i]) + ' correct: ' + str(classCorrect[i]) + ' success rate is ' + str(100 * classCorrect[i] / classTotal[i]))
+    # Evaluate the network
+    confusionMat = cnnUtils.CalculateConfusion(net, datasetClasses, testLoader)
+    infTime = cnnUtils.EvaluateInference(net, testLoader)
+    infText = 'Inference time: ' + infTime
+    print(infText)
