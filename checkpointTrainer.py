@@ -38,9 +38,22 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     logF.Log(str(opt))
 
+    # EBA values
+    #setMean = [0.546, 0.546, 0.546]
+    #setStd = [0.06, 0.06, 0.06]
+
     # Aviles values
     setMean = [0.429, 0.429, 0.429]
     setStd = [0.021, 0.021, 0.021]
+
+    # EBAviles values
+    #setMean = [0.502, 0.502, 0.502]
+    #setStd = [0.045, 0.045, 0.045]
+
+    # EBAvilesKN values
+    #setMean = [0.469, 0.469, 0.469]
+    #setStd = [0.049, 0.049, 0.049]
+
     outputClassCount = opt.outdim
     setImageSize = opt.imagesize
 
@@ -89,6 +102,7 @@ if __name__ == '__main__':
     # 2.1. Set the image transforms
     dataTransforms = {
     'train': transforms.Compose([
+        #cnnUtils.MonoConv(),
         transforms.Scale(setImageSize),
         transforms.RandomCrop(setImageSize),
         transforms.RandomHorizontalFlip(),
@@ -96,6 +110,7 @@ if __name__ == '__main__':
         transforms.Normalize(mean=setMean, std=setStd)
     ]),
     'test': transforms.Compose([
+        #cnnUtils.MonoConv(),
         transforms.Scale(setImageSize),
         transforms.CenterCrop(setImageSize),
         transforms.ToTensor(),
@@ -171,20 +186,20 @@ if __name__ == '__main__':
     logF.Log(statText)
 
     logF.Log('Training set accuracy values')
-    logF.Log(''.join(str(x) for x in trainAccuracyArray))
+    logF.Log(', '.join(str(x) for x in trainAccuracyArray))
     logF.Log('Test set accuracy values')
-    logF.Log(''.join(str(x) for x in testAccuracyArray))
+    logF.Log(', '.join(str(x) for x in testAccuracyArray))
     logF.Log('Learning rate values')
-    logF.Log(''.join(str(x) for x in lrLogArray))
+    logF.Log(', '.join(str(x) for x in lrLogArray))
     logF.Log('Training error values')
-    logF.Log(''.join(str(x) for x in trainErrorArray))
+    logF.Log(', '.join(str(x) for x in trainErrorArray))
     logF.Log('Test error values')
-    logF.Log(''.join(str(x) for x in testErrorArray))
+    logF.Log(', '.join(str(x) for x in testErrorArray))
 
     print('Calculating confusion matrix...')
 
     confusionMat = cnnUtils.CalculateConfusion(net, datasetClasses, testLoader)
-    logF.Log(''.join(str(x.numpy()) for x in confusionMat))
+    logF.Log(', '.join(str(x.numpy()) for x in confusionMat))
 
     infTime = cnnUtils.EvaluateInference(net, testLoader)
     infText = 'Inference time: ' + infTime

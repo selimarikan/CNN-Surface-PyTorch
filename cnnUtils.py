@@ -10,7 +10,7 @@ import matplotlib.ticker as ticker
 from matplotlib import cm
 from bokeh.layouts import gridplot
 from bokeh.plotting import figure, show, output_file
-from bokeh.palettes import Spectral7
+from bokeh.palettes import Paired8
 from bokeh.io import output_notebook
 #import visdom
 #from graphviz import Digraph
@@ -43,6 +43,10 @@ def ImSave(input, mean, std, title=None):
     input = input.numpy().transpose((1, 2, 0))
     input = std * input + mean
     plt.savefig(title + '.png')
+
+class MonoConv(object):
+    def __call__(self, image):
+        return image.split()[0]
 
 # TODO: Do we still need this?
 def VisualizeModel(model, numImages=6):
@@ -176,7 +180,7 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetPath,
                 	# Minibatch specific info
                     print('epoch {} batch {}/{} loss {:.3f}'.format(
                                 epoch, i, len(datasetLoaders[phase]), loss.data[0]))
-                    pred_y = preds[1].squeeze()
+                    #pred_y = preds[1].squeeze()
 
                     # t-SNE visualization : LATER!
                     if False:
@@ -614,7 +618,7 @@ def PlotActivationMaps(gradients):
 def PlotArrays(arrays, labels, xlabel, ylabel, title):
     p = figure(title=title, x_axis_label=xlabel, y_axis_label=ylabel)
     length = len(arrays[0])
-    palette = Spectral7[0:len(arrays)]
+    palette = Paired8[0:len(arrays)]
     x = np.linspace(0, length - 1, length)
     i = 0
     
