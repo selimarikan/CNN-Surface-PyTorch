@@ -34,6 +34,10 @@ def CreateNet(netName, setMean, setStd, setImageSize, outputClassCount):
         net = DSMNLNet128v4(setMean, setStd, setImageSize, outputClassCount)
         criterion = nn.NLLLoss()
 
+    elif netName == 'dsmnlv4ar':
+        net = DSMNLNet128v4ar(setMean, setStd, setImageSize, outputClassCount)
+        criterion = nn.NLLLoss()
+
     elif netName == 'dsmnlv4b':
         net = DSMNLNet128v4b(setMean, setStd, setImageSize, outputClassCount)
         criterion = nn.NLLLoss()
@@ -965,6 +969,110 @@ class DSMNLNet128v4(nn.Module):
         x = self.logsmax(x)
         return x
 
+class DSMNLNet128v4ar(nn.Module):
+    def __init__(self, mean, std, setImageSize, outputClassCount):
+        super(DSMNLNet128v4ar, self).__init__()
+        self.convIn = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=(5,5), stride=(2,2), padding=(2,2), dilation=(1,1))
+        self.batNIn = nn.BatchNorm2d(num_features=16)
+        self.reluIn = nn.PReLU()
+        
+        self.convIA = nn.Conv2d(in_channels=16, out_channels=16, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
+        self.batNIA = nn.BatchNorm2d(num_features=16)
+        self.reluIA = nn.PReLU()
+                
+        self.convI2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=(5,5), stride=(2,2), padding=(2,2), dilation=(1,1))
+        self.batNI2 = nn.BatchNorm2d(num_features=32)
+        self.reluI2 = nn.PReLU()
+        
+        self.convIB = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
+        self.batNIB = nn.BatchNorm2d(num_features=32)
+        self.reluIB = nn.PReLU()
+        
+        # Out CH = 128 !
+        self.convI3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(5,5), stride=(2,2), padding=(2,2), dilation=(1,1))
+        self.batNI3 = nn.BatchNorm2d(num_features=64)
+        self.reluI3 = nn.PReLU()
+        
+        self.convIC = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
+        self.batNIC = nn.BatchNorm2d(num_features=64)
+        self.reluIC = nn.PReLU()
+        
+        # Extended nonlinearity
+        self.convI4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
+        self.batNI4 = nn.BatchNorm2d(num_features=64)
+        self.reluI4 = nn.PReLU()
+        
+        self.convI5 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
+        self.batNI5 = nn.BatchNorm2d(num_features=64)
+        self.reluI5 = nn.PReLU()
+        
+        self.convI6 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
+        self.batNI6 = nn.BatchNorm2d(num_features=64)
+        self.reluI6 = nn.PReLU()
+            
+        self.outMul = int(setImageSize / 8) 
+            
+        self.fc = nn.Sequential(
+            nn.Linear(64 * self.outMul * self.outMul, outputClassCount),
+            )
+        self.logsmax = nn.LogSoftmax()
+
+    def GetMatchingLayer(self, inCh, outCh, stride, x):
+        c2d = nn.Conv2d(inCh, outCh, kernel_size=1, stride=stride, bias=False).cuda()
+        bn = nn.BatchNorm2d(outCh).cuda()
+        return bn(c2d(x))
+
+    def forward(self, x):
+        # Convolutional layer 1
+        #  Get the residual, match it to the output
+        plus01 = self.GetMatchingLayer(self.convIn.in_channels, self.convIn.out_channels, self.convIn.stride, x)
+        
+        convInResult = self.convIn(x)
+        #convInResult.register_hook(save_grad('convInGrad'))
+        #  Add the residual before activation function
+        x = self.reluIn(self.batNIn(convInResult))# + plus01)
+        #resIn = x
+        
+        x = self.reluIA(self.batNIA(self.convIA(x)) + plus01)
+        
+        # Convolutional layer 2
+        #  Get the residual, match it to the output
+        plus02 = self.GetMatchingLayer(self.convI2.in_channels, self.convI2.out_channels, self.convI2.stride, x)
+        convI2Result = self.convI2(x)
+        #convI2Result.register_hook(save_grad('convI2Grad'))
+        #  Add the residual before activation function
+        x = self.reluI2(self.batNI2(convI2Result))# + plus02)
+        #resI2 = x
+        
+        x = self.reluIB(self.batNIB(self.convIB(x)) + plus02)
+        
+        # Convolutional layer 3
+        #  Get the residual, match it to the output
+        plus03 = self.GetMatchingLayer(self.convI3.in_channels, self.convI3.out_channels, self.convI3.stride, x)
+        convI3Result = self.convI3(x)
+        #convI3Result.register_hook(save_grad('convI3Grad'))
+        #  Add the residual before activation function
+        x = self.reluI3(self.batNI3(convI3Result)) #  + plus03
+        #resI3 = x
+        
+        x = self.reluIC(self.batNIC(self.convIC(x)) + plus03)
+        
+        x = self.reluI4(self.batNI4(self.convI4(x)))
+        resI4 = x
+        x = self.reluI5(self.batNI5(self.convI5(x)) + resI4)
+        resI5 = x
+        x = self.reluI6(self.batNI6(self.convI6(x)) + resI5)
+        
+        # Reshape the result for fully-connected layers
+        x = x.view(-1, 64 * self.outMul * self.outMul)
+        
+        # Apply the result to fully-connected layers
+        x = self.fc(x)
+        
+        # Finally apply the LogSoftMax for output
+        x = self.logsmax(x)
+        return x
+
 # Dilate Stride Non-Linearity Network
 class DSMNLNet128v4b(nn.Module):
     def __init__(self, mean, std, setImageSize, outputClassCount):
@@ -985,39 +1093,39 @@ class DSMNLNet128v4b(nn.Module):
         self.batNIB = nn.BatchNorm2d(num_features=32)
         self.reluIB = nn.PReLU()
         
-        self.convI3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(1,1), dilation=(1,1))
-        self.batNI3 = nn.BatchNorm2d(num_features=64)
+        self.convI3 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3,3), stride=(2,2), padding=(1,1), dilation=(1,1))
+        self.batNI3 = nn.BatchNorm2d(num_features=32)
         self.reluI3 = nn.PReLU()
         
-        self.convIC = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
-        self.batNIC = nn.BatchNorm2d(num_features=64)
+        self.convIC = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
+        self.batNIC = nn.BatchNorm2d(num_features=32)
         self.reluIC = nn.PReLU()
         
-        self.convIX = nn.Conv2d(in_channels=64, out_channels=32, kernel_size=(3,3), stride=(2,2), padding=(1,1), dilation=(1,1))
-        self.batNIX = nn.BatchNorm2d(num_features=32)
+        self.convIX = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3,3), stride=(2,2), padding=(1,1), dilation=(1,1))
+        self.batNIX = nn.BatchNorm2d(num_features=64)
         self.reluIX = nn.PReLU()
         
-        self.convIY = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
-        self.batNIY = nn.BatchNorm2d(num_features=32)
+        self.convIY = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
+        self.batNIY = nn.BatchNorm2d(num_features=64)
         self.reluIY = nn.PReLU()
 
         # Extended nonlinearity
-        self.convI4 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
-        self.batNI4 = nn.BatchNorm2d(num_features=32)
+        self.convI4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
+        self.batNI4 = nn.BatchNorm2d(num_features=64)
         self.reluI4 = nn.PReLU()
         
-        self.convI5 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
-        self.batNI5 = nn.BatchNorm2d(num_features=32)
+        self.convI5 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
+        self.batNI5 = nn.BatchNorm2d(num_features=64)
         self.reluI5 = nn.PReLU()
         
-        self.convI6 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
-        self.batNI6 = nn.BatchNorm2d(num_features=32)
+        self.convI6 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(1,1), stride=(1,1), padding=(0,0), dilation=(1,1))
+        self.batNI6 = nn.BatchNorm2d(num_features=64)
         self.reluI6 = nn.PReLU()
             
         self.outMul = int(setImageSize / 16) 
             
         self.fc = nn.Sequential(
-            nn.Linear(32 * self.outMul * self.outMul, outputClassCount),
+            nn.Linear(64 * self.outMul * self.outMul, outputClassCount),
             )
         self.logsmax = nn.LogSoftmax()
 
@@ -1058,8 +1166,8 @@ class DSMNLNet128v4b(nn.Module):
         x = self.reluIX(self.batNIX(self.convIX(x)))
         resIX = x
         x = self.reluIY(self.batNIY(self.convIY(x)) + resIX)
-        
-        x = self.reluI4(self.batNI4(self.convI4(x)))
+        resIY = x
+        x = self.reluI4(self.batNI4(self.convI4(x)) + resIY)
         resI4 = x
         x = self.reluI5(self.batNI5(self.convI5(x)) + resI4)
         resI5 = x
@@ -1067,7 +1175,7 @@ class DSMNLNet128v4b(nn.Module):
         
         #print (x.size())
         # Reshape the result for fully-connected layers
-        x = x.view(-1, 32 * self.outMul * self.outMul)
+        x = x.view(-1, 64 * self.outMul * self.outMul)
         
         # Apply the result to fully-connected layers
         x = self.fc(x)

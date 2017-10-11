@@ -666,7 +666,7 @@ def DetermineAccuracy(net, phase, datasetLoaders):
             # TP or TN
             if predicted[iResult].cpu().numpy() == labels.data[iResult]:
                 # TP (defect)
-                if labels.data[iResult] == 1:
+                if labels.data[iResult] == 0:
                     tp += 1
                 # TN (non-defect)
                 else:
@@ -674,7 +674,7 @@ def DetermineAccuracy(net, phase, datasetLoaders):
             # FP or FN
             else:
                 # FP
-                if labels.data[iResult] == 0:
+                if labels.data[iResult] == 1:
                     fp += 1
                 # TN
                 else:
@@ -684,6 +684,7 @@ def DetermineAccuracy(net, phase, datasetLoaders):
 
     # Sanity
     assert total == (tp + tn + fp + fn)
+    print('TP: ' + tp + ' TN: ' + tn + ' FP: ' + fp + ' FN: ' + fn)
 
     accuracy = (tp + tn) / (tp + tn + fp + fn)
     precision = tp / (tp + fp)
