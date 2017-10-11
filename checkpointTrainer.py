@@ -29,6 +29,7 @@ if __name__ == '__main__':
     parser.add_argument('--l2', default=0.01, type=float, help='weight_decay strength')
     parser.add_argument('--lrdecay', default=0.8, type=float, help='learning rate decay multiplier')
     parser.add_argument('--numepochs', default=10, type=int, help='how many epochs for training')
+    parser.add_argument('--optimizer', default='rmsprop', type=str, help='choose optimizer to be used for training. Options are: rmsprop, sgd, adam, adagrad')
     parser.add_argument('--outdim', default=2, type=int, help='output dimension of the network (class count)')
     parser.add_argument('--net', default='dsmnl', type=str, help='choose network architecture to be used. Options are: dsmnl, alexnet, resnet, vgg')
 
@@ -60,7 +61,14 @@ if __name__ == '__main__':
     # 1. Create network and loss criterion
     net, criterion = neuralNets.CreateNet(opt.net, setMean, setStd, setImageSize, outputClassCount)
 
-    optimizer = optim.RMSprop(net.parameters(), lr=opt.lr, weight_decay=opt.l2)
+    if opt.optimizer == 'rmsprop':
+        optimizer = optim.RMSprop(net.parameters(), lr=opt.lr, weight_decay=opt.l2)
+    elif opt.optimizer == 'sgd':
+        optimizer = optim.SGD(net.parameters(), lr=opt.lr, weight_decay=opt.l2, momentum=0.9, nesterov=True)
+    elif opt.optimizer == 'adam':
+        optimizer = optim.Adam(net.parameters(), lr=opt.lr, weight_decay=opt.l2)
+    elif opt.optimizer == 'adagrad':
+        optimizer = optim.AdaGrad(net.parameters(), lr=opt.lr, weight_decay=opt.l2)
 
     if torch.cuda.is_available():
         net = net.cuda()

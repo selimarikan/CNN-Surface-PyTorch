@@ -684,7 +684,7 @@ def DetermineAccuracy(net, phase, datasetLoaders):
 
     # Sanity
     assert total == (tp + tn + fp + fn)
-    print('TP: ' + tp + ' TN: ' + tn + ' FP: ' + fp + ' FN: ' + fn)
+    print('TP: ' + str(tp) + ' TN: ' + str(tn) + ' FP: ' + str(fp) + ' FN: ' + str(fn))
 
     accuracy = (tp + tn) / (tp + tn + fp + fn)
     precision = tp / (tp + fp)
