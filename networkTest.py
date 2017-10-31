@@ -35,8 +35,8 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     
     # Should be average in the end.
-    setMean = [0.5, 0.5, 0.5]
-    setStd = [0.5, 0.5, 0.5]
+    setMean = [0.469, 0.469, 0.469]
+    setStd = [0.049, 0.049, 0.049]
 
     # Create net
     net, criterion = neuralNets.CreateNet(opt.net, setMean, setStd, opt.imageSize, outputClassCount=2)
@@ -70,13 +70,13 @@ if __name__ == '__main__':
         transforms.Scale(setImageSize),
         transforms.CenterCrop(setImageSize),
         transforms.ToTensor(),
-        #transforms.Normalize(mean=setMean, std=setStd)
+        transforms.Normalize(mean=setMean, std=setStd)
     ]), }
 
     # 2.2. Create dataset and loader
     dataset = torchvision.datasets.ImageFolder(opt.images, dataTransform['test'])
     #datasetLoader = torch.utils.data.DataLoader(dataset, batch_size=4, shuffle=True, num_workers=4, pin_memory=True)
-    testLoader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=1, pin_memory=True)
+    testLoader = torch.utils.data.DataLoader(dataset, batch_size=950, shuffle=False, num_workers=1, pin_memory=True)
     #print(datasetLoader)
     datasetSize = len(dataset)
     datasetClasses = dataset.classes

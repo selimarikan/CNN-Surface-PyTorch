@@ -40,9 +40,12 @@ def ImShow(input, mean, std, title=None):
     plt.pause(0.001)
 
 def ImSave(input, mean, std, title=None):
+    #print(input)
+    fig = plt.figure()
     input = input.numpy().transpose((1, 2, 0))
     input = std * input + mean
-    plt.savefig(title + '.png')
+    plt.imshow(input)
+    fig.savefig(title + '.png')
 
 class MonoConv(object):
     def __call__(self, image):
@@ -105,7 +108,7 @@ def SaveCheckpoint(state, datasetPath, checkpointName='checkpoint.pth'):
 def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetPath,
 						datasetLoaders, datasetSizes, trainAccuracyArray,
                         testAccuracyArray, lrLogArray, trainErrorArray, testErrorArray, 
-                        startingEpoch = 0, num_epochs=25, saveInterval=5):
+                        startingEpoch = 0, num_epochs=25, saveInterval=5, aec=False):
     since = time.time()
 
     #vis = visdom.Visdom()
@@ -120,6 +123,8 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetPath,
     # Set initial values
     best_model = model
     best_acc = 0.0
+    bestLoss = 10000000
+    epoch_acc = 0.0
     currentLr = 0
 
     # Check if saveInterval is meaningful
@@ -162,18 +167,26 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetPath,
 
                 # Forward, backward, optimize
                 outputs = model(inputs)
-                loss = criterion(outputs, labels)
+
+                if aec:
+                    labels = inputs
+
+                loss = criterion(outputs, labels.float())
+
                 # Backward + optimize only if in training phase
                 if phase == 'train':
                     loss.backward()
                     optimizer.step()
 
-                # Accuracy
-                _, preds = torch.max(outputs.data, 1)
+                if not aec:
+                    # Accuracy
+                    _, preds = torch.max(outputs.data, 1)
 
                 # statistics
                 running_loss += loss.data[0]
-                running_corrects += torch.sum(preds == labels.data)
+
+                if not aec:
+                    running_corrects += torch.sum(preds == labels.data)
 
                 if i % 50 == 0:
                 #if True == False:
@@ -192,31 +205,43 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetPath,
                         plot_with_labels(low_dim_embs, labels.data.cpu().numpy())
 
             epoch_loss = running_loss / datasetSizes[phase]
-            epoch_acc = running_corrects / datasetSizes[phase]
+
+            if not aec:
+                epoch_acc = running_corrects / datasetSizes[phase]
             
             if phase == 'train':
                 trainErrorArray.append(epoch_loss)
-                trainAccuracyArray.append(epoch_acc)
                 lrLogArray.append(currentLr)
+                if not aec:
+                    trainAccuracyArray.append(epoch_acc)
 
             if phase == 'test':
                 testErrorArray.append(epoch_loss)
-                testAccuracyArray.append(epoch_acc)
-            
+                if not aec:
+                    testAccuracyArray.append(epoch_acc)
+
+            if aec:
+                print(outputs)
+                ImSave(outputs[0].data.cpu().view(3, 128, 128), 0.546, 0.06, str(epoch) + '_0')
 
             print('{} Loss: {:.4f} Acc: {:.4f}'.format(
                 phase, epoch_loss, epoch_acc))
 
             # deep copy the model
-            if phase == 'test' and epoch_acc > best_acc:
-                best_acc = epoch_acc
-                best_model = copy.deepcopy(model)
+            if not aec:
+                if phase == 'test' and epoch_acc > best_acc:
+                    best_acc = epoch_acc
+                    best_model = copy.deepcopy(model)
+            else:
+                if phase == 'test' and epoch_loss < bestLoss:
+                    bestLoss = epoch_loss
+                    best_model = copy.deepcopy(model)
 
 
         print() 
 
         # Save network on each given interval
-        if epoch % saveInterval == 0:
+        if (aec == False) and (epoch % saveInterval == 0):
             checkpointName = type(model).__name__ + '_' + str(epoch) + 'checkpoint.pth'
             SaveCheckpoint({
                 'epoch': epoch + 1,
@@ -232,7 +257,8 @@ def TrainModelMiniBatch(model, criterion, optimizer, lr_scheduler, datasetPath,
 
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
-    print('Best val Acc: {:4f}'.format(best_acc))
+    if not aec:
+        print('Best val Acc: {:4f}'.format(best_acc))
 
     SaveCheckpoint({
                 'epoch': epoch + 1,
@@ -605,15 +631,19 @@ class SELU(nn.Module):
         inplace_str = ' (inplace)' if self.inplace else ''
         return self.__class__.__name__ + inplace_str
 
-def PlotActivationMaps(gradients):
+def PlotActivationMaps(gradients=grads):
+    #print(gradients)
+    gradients = gradients['convInGrad']
     for iT in range(gradients.size()[0]):
-        plt.figure(figsize=(12, 12))
+        fig = plt.figure(figsize=(12, 12))
         for z in range(gradients.size()[1]):
             plt.subplot(8, 8, z+1)
             plt.title('Level ' + str(iT) + ' field:' + str(z))
             plt.axis('off')
             plt.pause(0.001)
             plt.imshow(gradients[iT, z, :, :].data.cpu().numpy(), interpolation='nearest', cmap='gray')
+        
+        fig.savefig(str(iT) + 'convInGrad.png')
             
 def PlotArrays(arrays, labels, xlabel, ylabel, title):
     p = figure(title=title, x_axis_label=xlabel, y_axis_label=ylabel)
@@ -714,7 +744,7 @@ def CalculateConfusion(net, datasetClasses, testLoader):
         else: # Display failure cases
             out = torchvision.utils.make_grid(inputs.data.cpu())
             #ImShow(out, mean=0.5, std=0.5, title=datasetClasses[labels.data.cpu()[0]])
-            #ImSave(out, 0.5, 0.5, str(i) + str(datasetClasses[labels.data.cpu()[0]]))
+            #ImSave(out, 0.43, 0.021, str(i) + str(datasetClasses[labels.data.cpu()[0]]))
 
     for i, cls in enumerate(classCorrect):
         print('Class ' + datasetClasses[i] + ' total: ' + str(classTotal[i]) + ' correct: ' + str(classCorrect[i]) + ' success rate is ' + str(100 * classCorrect[i] / classTotal[i])) 
@@ -738,6 +768,7 @@ def EvaluateInference(net, testLoader, testCount=10):
     for i in range(times.size):
         input, label = next(iter(testLoader))
         input, label = ToVar(input), ToVar(label)
+        #print('Loaded ' + str(input.data.size()[0]) + ' samples')
 
         startT = time.perf_counter()
         outputs = net(input)

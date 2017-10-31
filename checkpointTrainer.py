@@ -26,12 +26,12 @@ if __name__ == '__main__':
     parser.add_argument('--imagesize', default=128, type=int, help='images will be scaled to this size')
     parser.add_argument('--batchsize', default=10, type=int, help='number of images to be loaded for each mini-batch')
     parser.add_argument('--lr', default=0.0001, type=float, help='starting learning rate (if you are resuming, this value will be overwritten)')
-    parser.add_argument('--l2', default=0.01, type=float, help='weight_decay strength')
+    parser.add_argument('--l2', default=0.1, type=float, help='weight_decay strength')
     parser.add_argument('--lrdecay', default=0.8, type=float, help='learning rate decay multiplier')
     parser.add_argument('--numepochs', default=10, type=int, help='how many epochs for training')
-    parser.add_argument('--optimizer', default='rmsprop', type=str, help='choose optimizer to be used for training. Options are: rmsprop, sgd, adam, adagrad')
+    parser.add_argument('--optimizer', default='rmsprop', type=str, help='choose optimizer to be used for training. Options are: rmsprop, sgd, adam')
     parser.add_argument('--outdim', default=2, type=int, help='output dimension of the network (class count)')
-    parser.add_argument('--net', default='dsmnl', type=str, help='choose network architecture to be used. Options are: dsmnl, alexnet, resnet, vgg')
+    parser.add_argument('--net', default='dsmnlv4', type=str, help='choose network architecture to be used. Options are: dsmnl, alexnet, resnet, vgg')
 
     logFileName = 'CheckpointTrainerLog.txt'
     logF = cnnUtils.TXTLogger(logFileName)
@@ -44,16 +44,21 @@ if __name__ == '__main__':
     #setStd = [0.06, 0.06, 0.06]
 
     # Aviles values
-    setMean = [0.429, 0.429, 0.429]
-    setStd = [0.021, 0.021, 0.021]
+    #setMean = [0.429, 0.429, 0.429]
+    #setStd = [0.021, 0.021, 0.021]
 
     # EBAviles values
-    #setMean = [0.502, 0.502, 0.502]
-    #setStd = [0.045, 0.045, 0.045]
+    #setMean = [0.505, 0.505, 0.505]
+    #setStd = [0.044, 0.044, 0.044]
 
     # EBAvilesKN values
     #setMean = [0.469, 0.469, 0.469]
     #setStd = [0.049, 0.049, 0.049]
+
+    # MultiSet values
+    setMean = [0.388, 0.388, 0.388]
+    setStd = [0.060, 0.060, 0.060]
+
 
     outputClassCount = opt.outdim
     setImageSize = opt.imagesize
@@ -64,11 +69,12 @@ if __name__ == '__main__':
     if opt.optimizer == 'rmsprop':
         optimizer = optim.RMSprop(net.parameters(), lr=opt.lr, weight_decay=opt.l2)
     elif opt.optimizer == 'sgd':
-        optimizer = optim.SGD(net.parameters(), lr=opt.lr, weight_decay=opt.l2, momentum=0.9, nesterov=True)
+        optimizer = optim.SGD(net.parameters(), lr=opt.lr, weight_decay=opt.l2)
     elif opt.optimizer == 'adam':
         optimizer = optim.Adam(net.parameters(), lr=opt.lr, weight_decay=opt.l2)
-    elif opt.optimizer == 'adagrad':
-        optimizer = optim.AdaGrad(net.parameters(), lr=opt.lr, weight_decay=opt.l2)
+    # Does not work for some reason
+    #elif opt.optimizer == 'adagrad':
+    #    optimizer = optim.Adagrad(net.parameters(), lr=opt.lr, weight_decay=opt.l2)
 
     if torch.cuda.is_available():
         net = net.cuda()
@@ -83,6 +89,7 @@ if __name__ == '__main__':
             m.weight.data.fill_(1)
             m.bias.data.zero_()
     print('Weights initialized!')
+
     # 2. Load the images
     if opt.dataset == '':
         print('Image path cannot be empty')
@@ -102,7 +109,7 @@ if __name__ == '__main__':
         else:
             print("=> no checkpoint found at '{}'".format(resumePath))
 
-    lrScheduler = cnnUtils.StepLR(optimizer, step_size=3, gamma=opt.lrdecay, last_epoch=opt.startepoch - 1)
+    lrScheduler = cnnUtils.StepLR(optimizer, step_size=7, gamma=opt.lrdecay, last_epoch=opt.startepoch - 1)
     #lrScheduler = cnnUtils.StepLR(optimizer, step_size=3, gamma=0.1, last_epoch=opt.startepoch - 1)
 
     torch.backends.cudnn.benchmark = True
@@ -182,7 +189,7 @@ if __name__ == '__main__':
     # Set the network back so that best model is used for metrics
     net = cnnUtils.TrainModelMiniBatch(net, criterion, optimizer, lrScheduler, opt.dataset, datasetLoaders, datasetSizes, 
         trainAccuracyArray, testAccuracyArray, lrLogArray, trainErrorArray, testErrorArray, 
-        opt.startepoch, num_epochs=opt.numepochs)
+        opt.startepoch, num_epochs=opt.numepochs, aec=True)
 
     print('Calculating classification metrics...')
 
@@ -213,6 +220,8 @@ if __name__ == '__main__':
     infText = 'Inference time: ' + infTime
     print(infText)
     logF.Log(infText)
+
+    cnnUtils.PlotActivationMaps()
 
     logF.Log('------- Finished CheckpointTrainer -------')
     # 3. Prediction

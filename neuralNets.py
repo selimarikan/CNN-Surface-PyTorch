@@ -93,6 +93,10 @@ def CreateNet(netName, setMean, setStd, setImageSize, outputClassCount):
         net = torchvision.models.densenet121()
         net.fc.out_features = opt.outdim
         criterion = nn.CrossEntropyLoss()
+    
+    elif netName == 'aec':
+        net = AEC(setImageSize)
+        criterion = nn.L1Loss()
 
     else:
         print('Unknown network name')
@@ -133,17 +137,17 @@ class Net(nn.Module):
     def forward(self, x):
         # Convolutional layer 1
         convInResult = self.convIn(x)
-        convInResult.register_hook(save_grad('convInGrad'))
+        convInResult.register_hook(cnnUtils.save_grad('convInGrad'))
         x = self.poolIn(self.reluIn(convInResult))
         
         # Convolutional layer 2
         convI2Result = self.convI2(x)
-        convI2Result.register_hook(save_grad('convI2Grad'))
+        convI2Result.register_hook(cnnUtils.save_grad('convI2Grad'))
         x = self.poolI2(self.reluI2(convI2Result))
         
         # Convolutional layer 3
         convI3Result = self.convI3(x)
-        convI3Result.register_hook(save_grad('convI3Grad'))
+        convI3Result.register_hook(cnnUtils.save_grad('convI3Grad'))
         x = self.poolI3(self.reluI3(convI3Result))
         
         
@@ -254,17 +258,17 @@ class NetBNSELU(nn.Module):
     def forward(self, x):
         # Convolutional layer 1
         convInResult = self.convIn(x)
-        convInResult.register_hook(save_grad('convInGrad'))
+        convInResult.register_hook(cnnUtils.save_grad('convInGrad'))
         x = self.poolIn(self.seluIn(self.batNIn(convInResult)))
         
         # Convolutional layer 2
         convI2Result = self.convI2(x)
-        convI2Result.register_hook(save_grad('convI2Grad'))
+        convI2Result.register_hook(cnnUtils.save_grad('convI2Grad'))
         x = self.poolI2(self.seluI2(self.batNI2(convI2Result)))
         
         # Convolutional layer 3
         convI3Result = self.convI3(x)
-        convI3Result.register_hook(save_grad('convI3Grad'))
+        convI3Result.register_hook(cnnUtils.save_grad('convI3Grad'))
         x = self.poolI3(self.seluI3(self.batNI3(convI3Result)))
         
         # Reshape the result for fully-connected layers
@@ -924,7 +928,7 @@ class DSMNLNet128v4(nn.Module):
         #  Get the residual, match it to the output
         #plus01 = GetMatchingLayer(self.convIn.in_channels, self.convIn.out_channels)(x)
         convInResult = self.convIn(x)
-        #convInResult.register_hook(save_grad('convInGrad'))
+        convInResult.register_hook(cnnUtils.save_grad('convInGrad'))
         #  Add the residual before activation function
         x = self.reluIn(self.batNIn(convInResult)) #  + plus01
         resIn = x
@@ -1943,7 +1947,7 @@ class BuzzNet(nn.Module):
         #  Get the residual, match it to the output
         #plus01 = GetMatchingLayer(self.convIn.in_channels, self.convIn.out_channels)(x)
         convInResult = self.convIn(x)
-        #convInResult.register_hook(save_grad('convInGrad'))
+        convInResult.register_hook(cnnUtils.save_grad('convInGrad'))
         #  Add the residual before activation function
         x = self.reluIn(convInResult)#self.batNIn(convInResult)) #  + plus01
 
@@ -2030,4 +2034,25 @@ class BuzzNetv3(nn.Module):
         
         # Finally apply the LogSoftMax for output
         x = self.logsmax(x)
+        return x
+
+class AEC(nn.Module):
+    def __init__(self, setImageSize):
+        super(AEC, self).__init__()
+        self.setImageSize = setImageSize
+        self.fc1 = nn.Linear(setImageSize * setImageSize * 3, 1024)
+        self.fc2 = nn.Linear(1024, 128)
+        self.fc3 = nn.Linear(128, 1024)
+        self.fc4 = nn.Linear(1024, setImageSize * setImageSize * 3)
+        #self.logsmax = nn.LogSoftmax()
+
+    def forward(self, x):
+        
+        x = x.view(-1, self.setImageSize * self.setImageSize * 3)
+
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.fc3(x)
+        x = self.fc4(x)
+        
         return x
